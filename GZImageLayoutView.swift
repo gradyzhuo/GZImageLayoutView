@@ -10,6 +10,10 @@ import UIKit
 import AVFoundation
 
 
+protocol Keyable:Hashable, Equatable{
+    
+}
+
 extension CGPoint {
     
     private init(pointOfLayout point:[CGFloat], multiple value:CGFloat = 1){
@@ -52,10 +56,10 @@ enum GZLayoutPointUnit{
     init(dataDict:[NSObject:AnyObject]) {
         
         var type = dataDict["type"] as String
-//        var point = CGPoint(pointOfLayout: dataDict["point"] as [CGFloat])
+        //        var point = CGPoint(pointOfLayout: dataDict["point"] as [CGFloat])
         
         self.init(type:type, point:dataDict["point"] as [CGFloat])
-    
+        
     }
     
     
@@ -110,7 +114,7 @@ let kGZPositionFullLayout:GZPosition = GZPosition.fullPosition()
 
 
 class GZPosition {
-
+    
     private var privateObjectInfo:ObjectInfo = ObjectInfo()
     
     var identifier:String{
@@ -121,7 +125,7 @@ class GZPosition {
         
         return self.privateObjectInfo.layoutPoints
         
-
+        
     }
     
     private class func fullPosition()->GZPosition {
@@ -165,7 +169,7 @@ class GZPosition {
         
         return bezierPath
     }
-
+    
     convenience init(dataDict:[NSObject:AnyObject]) {
         
         var points:[GZLayoutPointUnit] = (dataDict["points"] as [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
@@ -198,17 +202,28 @@ class GZPosition {
 
 class GZLayout {
     
-//    var contexts:[[NSObject:AnyObject]] = []
+    //    var contexts:[[NSObject:AnyObject]] = []
+    
+    var identifier:String{
+        
+        var identifier = "Layout::"
+        for position in self.positions {
+            identifier += "\(position.bezierPath.hashValue)::"
+        }
+        
+        return identifier
+        
+    }
     
     private var privateObjectInfo:ObjectInfo = ObjectInfo()
     
-//    class func emptyLayout()->GZLayout{
-//        
-//        var layout = GZLayout(json: nil)
-//        
-//        
-//        return
-//    }
+    //    class func emptyLayout()->GZLayout{
+    //
+    //        var layout = GZLayout(json: nil)
+    //
+    //
+    //        return
+    //    }
     
     class func fullLayout()->GZLayout {
         
@@ -217,7 +232,7 @@ class GZLayout {
         
         return layout
     }
-
+    
     
     var positions:[GZPosition] {
         return self.privateObjectInfo.positions
@@ -237,7 +252,7 @@ class GZLayout {
         var position:[GZPosition] = json.map{GZPosition(dataDict: $0)}
         
         self.init(positions:position)
-
+        
     }
     
     init(positions:[GZPosition]) {
@@ -257,18 +272,72 @@ class GZLayout {
     private struct ObjectInfo{
         
         var positions:[GZPosition] = []
-
+        
     }
     
     
 }
 
 
+let GZImageLayoutViewMetaDataLayoutKey = "GZImageLayoutViewMetaDataLayoutKey"
+let GZImageLayoutViewMetaDataImagesKey = "GZImageLayoutViewMetaDataImagesKey"
+
 class GZImageLayoutView: UIView {
     
-    var layout:GZLayout = GZLayout.fullLayout()
+    private var privateObjectInfo:ObjectInfo = ObjectInfo()
     
-    var positionViews:[GZPositionView] = []
+    var metaData:[NSObject:AnyObject]?{
+        
+        get{
+            var metaData:[NSObject:AnyObject!] = [:]
+            var images:[String:UIImage] = [:]
+            for (identifier, positionView) in self.positionViews{
+                
+                if positionView is GZPositionEditView {
+                    
+                    var positionEditView = positionView as GZPositionEditView
+                    if positionEditView.image != nil {
+                        images[positionView.identifier] = positionEditView.image
+                    }
+                    
+                }
+                
+                metaData[GZImageLayoutViewMetaDataImagesKey] = self.privateObjectInfo.imageMetaData//images
+                metaData[GZImageLayoutViewMetaDataLayoutKey] = self.layout
+                
+            }
+            
+            return metaData
+        }
+        
+        set{
+            
+            if let newMetaData = newValue {
+                
+                var layout:GZLayout = newValue?[GZImageLayoutViewMetaDataLayoutKey] as GZLayout
+                
+                self.privateObjectInfo.imageMetaData = newValue?[GZImageLayoutViewMetaDataImagesKey] as [String:UIImage]
+                
+                self.relayout(layout)
+                
+                for (position, image) in self.privateObjectInfo.imageMetaData {
+                    
+                    self.setImage(image, forPosition: position)
+                    
+                }
+            }
+            
+        }
+        
+    }
+    
+    var layout:GZLayout{
+        get{
+            return self.privateObjectInfo.layout
+        }
+    }
+    
+    var positionViews:[String:GZPositionView] = [:]
     
     var cameraView:GZCameraView{
         return self.highlighView.cameraView
@@ -304,7 +373,7 @@ class GZImageLayoutView: UIView {
             
             if currentPosition != nil {
                 self.highlighView.position = currentPosition
-                self.highlighView.applyMask(self.frame.size)
+                self.highlighView.applyMask(self.bounds.size)
                 
             }
             
@@ -323,7 +392,6 @@ class GZImageLayoutView: UIView {
                 borderBezierPath.appendPath(position.bezierPath)
             }
             
-            
             return borderBezierPath
         }
     }
@@ -331,15 +399,15 @@ class GZImageLayoutView: UIView {
     private lazy var borderView:GZHighlightBorderView = {
         
         var border = GZHighlightBorderView()
-
+        
         return border
         
-    }()
+        }()
     
     var borderColor:UIColor{
         
         set{
-            self.borderView.borderColor = borderColor
+            self.borderView.borderColor = newValue
         }
         
         get{
@@ -368,6 +436,7 @@ class GZImageLayoutView: UIView {
         self.relayout(layout)
         self.currentPosition = layout.positions.first
         
+        
         self.borderView.hidden = true
         self.borderView.borderColor = UIColor.grayColor()
         
@@ -378,7 +447,7 @@ class GZImageLayoutView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-
+        
         var borderBezierPath = UIBezierPath()
         borderBezierPath.appendPath(self.borderBezierPath)
         borderBezierPath.applyTransform(CGAffineTransformMakeScale(self.bounds.width, self.bounds.height))
@@ -386,55 +455,78 @@ class GZImageLayoutView: UIView {
         self.borderView.bezierPath = borderBezierPath
         self.borderView.frame = self.bounds
         
+        self.highlighView.applyMask(self.bounds.size)
+        
+        for identifier in self.positionIdentifiers {
+            var positionView = self.positionViews[identifier]
+            
+            
+            var idx = find(self.positionIdentifiers, identifier) ?? 0
+            positionView?.position = layout.positions[idx]
+            positionView?.applyMask(self.frame.size)
+
+        }
+        
+//        for i in 0 ..< self.positionViews.count {
+//            
+//            var positionView = self.positionViews[i]
+//            
+//            positionView.position = layout.positions[i]
+//            positionView.applyMask(self.frame.size)
+//            
+//        }
+        
+        
     }
     
     func positionView(forIdentifier identifier:String)->GZPositionView! {
         
-        var filtedPositionViews = self.positionViews.filter{ return ($0 as GZPositionView).position.identifier == identifier  }
-        return filtedPositionViews.first
+//        var filtedPositionViews = self.positionViews.filter{ return ($0 as GZPositionView).position?.identifier == identifier  }
+        return self.positionViews[identifier] //filtedPositionViews.first
         
     }
     
     func setImage(image:UIImage?, forPosition identifier:String){
         
-        var positionView = self.positionView(forIdentifier: identifier) as GZPositionEditView
-        positionView.image = image
+        var positionView = self.positionView(forIdentifier: identifier) as? GZPositionEditView
+        
+        positionView?.image = image
+        
+        self.privateObjectInfo.imageMetaData[identifier] = image
+        
+    }
+    
+    func imgaeForPosition(identifier:String)->UIImage?{
+        
+        var positionView = self.positionView(forIdentifier: identifier) as? GZPositionEditView
+        return positionView?.image
         
     }
     
     func relayout(layout:GZLayout){
         
-        if self.positionViews.count > layout.positions.count {
+        var imageMetaData = self.privateObjectInfo.imageMetaData
+        
+        for (identifier,positionView) in self.positionViews{
             
-            for i in 0 ..< self.positionViews.count-layout.positions.count {
-                
-                var lastPositionView = self.positionViews.removeLast()
-                lastPositionView.removeFromSuperview()
+            positionView.removeFromSuperview()
+            
+        }
+        
+        self.positionViews.removeAll(keepCapacity: false)
+        
+        for position in layout.positions {
+            
+            var positionView = GZPositionEditView(position: position)
+            positionView.layoutView = self
+            
+            if let image = imageMetaData[position.identifier] {
+                positionView.image = image
             }
             
+            self.addSubview(positionView)
             
-            self.currentPosition = layout.positions.first
-            
-        }else if self.positionViews.count < layout.positions.count {
-            
-            for i in 0 ..< layout.positions.count - self.positionViews.count {
-                
-                var positionView = GZPositionEditView()
-//                positionView.backgroundColor = UIColor.greenColor()
-                
-                positionView.scrollView.contentSize = CGSize(width: 1000, height: 1000)
-                
-                if let lastPositionView = self.positionViews.last {
-                    self.insertSubview(positionView, belowSubview: self.positionViews.last!)
-                    
-                }else{
-                    self.addSubview(positionView)
-                }
-                
-                
-                self.positionViews.append(positionView)
-                
-            }
+            self.positionViews[position.identifier] = positionView
             
         }
         
@@ -449,20 +541,23 @@ class GZImageLayoutView: UIView {
             
         }
         
-        for i in 0 ..< self.positionViews.count {
-            
-            var positionView = self.positionViews[i]
-            
-            positionView.position = layout.positions[i]
-            positionView.applyMask(self.frame.size)
-            
-        }
+/* 先別刪 要看之後還會不會自動layout
+//        for i in 0 ..< self.positionViews.count {
+//            
+//            var positionView = self.positionViews[i]
+//            
+//            positionView.position = layout.positions[i]
+//            positionView.applyMask(self.frame.size)
+//            
+//        }
+*/
+        
         self.bringSubviewToFront(self.borderView)
         self.bringSubviewToFront(self.highlighView)
         
-        self.layout = layout
+        self.privateObjectInfo.layout = layout
         
-        self.setNeedsDisplay()
+//        self.setNeedsLayout()
         
     }
     
@@ -481,12 +576,24 @@ class GZImageLayoutView: UIView {
                 
                 return hitView
             }
-        
+            
         }while  hitView != nil
-
+        
         return hitView
     }
-
+    
+    
+    //MARK: Object Info Struct
+    
+    private struct ObjectInfo{
+        
+        var layout:GZLayout = GZLayout.fullLayout()
+        var imageMetaData:[String:UIImage] = [:]
+    
+        
+    }
+    
+    //MARK: Touch Event Handler
     
     override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
         super.touchesBegan(touches, withEvent: event)
@@ -511,12 +618,16 @@ class GZImageLayoutView: UIView {
         if previousTouchScope.contains(currentLocation) {
             
             var positionView:GZPositionView? = self.hitTest(currentLocation, withEvent: event) as? GZPositionView
-            self.currentPosition = positionView?.position            
+            println("positionView:\(positionView)")
+            self.currentPosition = positionView?.position
             
         }
         
         
     }
+    
+    
+    
     
 }
 
@@ -533,8 +644,14 @@ class GZPositionView: UIView {
         }
     }
     
+    var identifier:String {
+        return self.position.identifier
+    }
+    
     var maskBezierPath:UIBezierPath!
-
+    
+    private var layoutView:GZImageLayoutView? = nil
+    
     init(position:GZPosition! = nil, frame:CGRect = CGRect()){
         super.init(frame:frame)
         
@@ -576,10 +693,11 @@ class GZPositionView: UIView {
         bezierPath.applyTransform(CGAffineTransformMakeScale(size.width, size.height))
         
         self.frame = bezierPath.bounds
-        self.layoutSubviews()
+        
+        self.layoutIfNeeded()
     }
     
-
+    
     override func pointInside(point: CGPoint, withEvent event: UIEvent?) -> Bool {
         
         if let maskLayer = self.layer.mask as? CAShapeLayer {
@@ -597,8 +715,20 @@ class GZPositionView: UIView {
 class GZPositionEditView:GZPositionView, UIScrollViewDelegate {
     
     var image:UIImage!{
-        didSet{
-            self.imageView.image = image
+        
+        set{
+            self.imageView.image = newValue
+            
+            if newValue != nil {
+                if let parentLayoutView = self.layoutView {
+                    parentLayoutView.privateObjectInfo.imageMetaData[self.identifier] = newValue
+                }
+            }
+            
+        }
+        
+        get{
+            return self.imageView.image
         }
     }
     
@@ -608,7 +738,7 @@ class GZPositionEditView:GZPositionView, UIScrollViewDelegate {
         self.addSubview(scrollView)
         
         return scrollView
-    }()
+        }()
     
     private lazy var imageView:UIImageView = {
         
@@ -619,7 +749,20 @@ class GZPositionEditView:GZPositionView, UIScrollViewDelegate {
         
         
         return imageView
-    }()
+        }()
+    
+    private override var layoutView:GZImageLayoutView?{
+        
+        didSet{
+            
+            var image = layoutView?.imgaeForPosition(self.identifier)
+            
+            if image == nil && self.image != nil {
+                layoutView?.setImage(self.image, forPosition: self.identifier)
+            }
+        }
+        
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -632,6 +775,7 @@ class GZPositionEditView:GZPositionView, UIScrollViewDelegate {
     internal func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
         return self.imageView
     }
+    
     
 }
 
@@ -652,7 +796,19 @@ class GZHighlightView: GZPositionView {
         
         return cameraView
     }()
-
+    
+    var borderColor:UIColor{
+        
+        set{
+            self.borderView.borderColor = newValue
+        }
+        
+        get{
+            return self.borderView.borderColor
+        }
+        
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         
@@ -663,13 +819,13 @@ class GZHighlightView: GZPositionView {
     
     override func applyMask(size: CGSize) {
         super.applyMask(size)
-
+        
         self.borderView.bezierPath = self.maskBezierPath
         self.borderView.frame = self.bounds
-//        self.borderView.setNeedsDisplay()
+//            self.borderView.setNeedsDisplay()
         
     }
-
+    
     
 }
 
@@ -705,6 +861,13 @@ class GZHighlightBorderView: UIView {
         super.init(frame: frame)
         
         self.setup()
+        
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        self.setNeedsDisplay()
         
     }
     
