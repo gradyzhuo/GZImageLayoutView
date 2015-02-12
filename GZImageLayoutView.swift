@@ -109,6 +109,7 @@ enum GZLayoutPointUnit{
 }
 
 
+//let kGZImageLayoutJSONLayoutIdentifierName = "identifier"
 let kGZPositionIdentifierDefaultFull = "Full"
 let kGZPositionFullLayout:GZPosition = GZPosition.fullPosition()
 
@@ -206,13 +207,16 @@ class GZLayout {
     
     var identifier:String{
         
-        var identifier = "Layout::"
-        for position in self.positions {
-            identifier += "\(position.bezierPath.hashValue)::"
+        if self.privateObjectInfo.identifier == nil {
+            var identifier = "Layout::"
+            for position in self.positions {
+                identifier += "\(position.bezierPath.hashValue)::"
+            }
+            
+            return identifier
         }
         
-        return identifier
-        
+        return self.privateObjectInfo.identifier
     }
     
     private var privateObjectInfo:ObjectInfo = ObjectInfo()
@@ -240,23 +244,43 @@ class GZLayout {
     
     convenience init(){
         
-        
         var position:[GZPosition] = []
         
         self.init(positions:position)
         
     }
     
-    convenience init(json:[[NSObject:AnyObject]]){
+    
+    convenience init(jsonString:String!){
         
-        var position:[GZPosition] = json.map{GZPosition(dataDict: $0)}
-        
-        self.init(positions:position)
+        var jsonData = jsonString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)
+        self.init(jsonData:jsonData)
         
     }
     
-    init(positions:[GZPosition]) {
+    convenience init(jsonData:NSData!, options:NSJSONReadingOptions = NSJSONReadingOptions.AllowFragments, error:NSErrorPointer = nil){
         
+        var jsonObject: [String:AnyObject]? = NSJSONSerialization.JSONObjectWithData(jsonData, options: options, error: error) as? [String:AnyObject]
+        self.init(jsonObject:jsonObject ?? [:])
+    }
+    
+    convenience init(jsonObject:[String:AnyObject]){
+        
+        var identifier:String! = jsonObject["identifier"] as String
+        var originalPositions = jsonObject["positions"] as [[NSObject:AnyObject]]
+        var position:[GZPosition] = originalPositions.map{GZPosition(dataDict: $0)}
+        
+        self.init(identifier: identifier, positions:position)
+        
+    }
+    
+    convenience init(positions:[GZPosition]) {
+        self.init(identifier:nil, positions:positions)
+        
+    }
+    
+    init(identifier:String!, positions:[GZPosition]) {
+        self.privateObjectInfo.identifier = identifier
         self.privateObjectInfo.positions = positions
         
     }
@@ -270,7 +294,7 @@ class GZLayout {
     
     
     private struct ObjectInfo{
-        
+        var identifier:String! = nil
         var positions:[GZPosition] = []
         
     }

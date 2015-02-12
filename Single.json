@@ -1,0 +1,15 @@
+{
+    "identifier":"ONE_SINGLE",
+    "positions":[
+        {
+            "position":"0",
+            "points":[
+                {"type":"line","point":[0,0]},
+                {"type":"line","point":[0,1]},
+                {"type":"line","point":[1,1]},
+                {"type":"line","point":[1,0]}
+            ]
+        }
+    ]
+
+}
