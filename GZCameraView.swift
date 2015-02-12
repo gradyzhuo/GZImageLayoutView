@@ -113,6 +113,10 @@ class GZCameraView: UIView {
         }
     }
     
+    var isCurrentCaptureDeviceAvailable:Bool{
+        return self.currentCaptureDevice != nil
+    }
+    
     var opened:Bool = true{
         didSet{
             if opened {
@@ -252,7 +256,7 @@ class GZCameraView: UIView {
     func configure(){
         
         self.changeDevicePosition()
-        self.openCamera()
+//        self.openCamera()
         
     }
     
@@ -305,29 +309,37 @@ class GZCameraView: UIView {
     
     func takePhoto(completionHandler:(imageData:NSData, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
         
-        self.stillImageOutput.outputSettings = [AVVideoCodecKey:AVVideoCodecJPEG]
         
-        var connection = self.stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
         
-        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection(connection, completionHandler: { (sampleBuffer:CMSampleBuffer!, error:NSError!) -> Void in
+        if self.isCurrentCaptureDeviceAvailable {
             
-            if let sampleBuffer = sampleBuffer {
-                
-                var imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
-                
-                completionHandler(imageData: imageData, metaData: [:], error: error)
-//                completionHandler(originalData: data, image: UIImage(data: data), metaData: [:])
-                
-            }
+            self.stillImageOutput.outputSettings = [AVVideoCodecKey:AVVideoCodecJPEG]
             
-        })
+            var connection = self.stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
+            
+            self.stillImageOutput.captureStillImageAsynchronouslyFromConnection(connection, completionHandler: { (sampleBuffer:CMSampleBuffer!, error:NSError!) -> Void in
+                
+                if let sampleBuffer = sampleBuffer {
+                    
+                    var imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
+                    
+                    completionHandler(imageData: imageData, metaData: [:], error: error)
+                    //                completionHandler(originalData: data, image: UIImage(data: data), metaData: [:])
+                    
+                }
+                
+            })
+            
+        }
+        
+        
         
         
         
     }
     
     
-    func openCamera(force:Bool = true){
+    func openCamera(force:Bool = false){
         
         if force {
             self.captureSession.stopRunning()
