@@ -312,11 +312,34 @@ struct GZScrollViewMetaData {
     var contentSize:CGSize
     var contentOffset:CGPoint
     var zoomScale:CGFloat
+    var frame:CGRect
+    var imageRatio:CGFloat
     
-    init(scrollView:UIScrollView){
+    init(scrollView:UIScrollView, imageRatio ratio:CGFloat){
         self.contentSize = scrollView.contentSize
         self.contentOffset = scrollView.contentOffset
         self.zoomScale = scrollView.zoomScale
+        self.frame = scrollView.frame
+        self.imageRatio = ratio
+    }
+    
+    var cropInfo:GZCropInfo{
+        
+        var contentOffset = self.contentOffset
+        var zoomScale = self.zoomScale
+        var imageRatio = self.imageRatio
+        
+        var scrollViewSize = self.frame.size
+        
+        var cropRatio = zoomScale / imageRatio
+        
+        var cropWidth = scrollViewSize.width / cropRatio
+        var cropHeight = scrollViewSize.height / cropRatio
+        var cropX = contentOffset.x / cropRatio
+        var cropY = contentOffset.y / cropRatio
+        
+        return GZCropInfo(x: cropX, y: cropY, width: cropWidth, height: cropHeight)
+        
     }
     
 }
@@ -325,6 +348,58 @@ struct GZPositionViewImageMetaData{
     var identifier:String
     var image:UIImage!
 }
+
+struct GZCropInfo:Printable, DebugPrintable{
+    
+    private let rect:CGRect
+    
+    let angle:CGFloat = 0.0
+    
+    var x:CGFloat{
+        return self.rect.minX
+    }
+    
+    var y:CGFloat{
+        return self.rect.minY
+    }
+    
+    var width:CGFloat{
+        return self.rect.width
+    }
+    
+    var height:CGFloat{
+        return self.rect.height
+    }
+    
+    
+    init(rect:CGRect, angle:CGFloat){
+        self.rect = rect
+        self.angle = angle
+    }
+    
+    init(x:CGFloat, y:CGFloat, width:CGFloat, height:CGFloat, angle:CGFloat){
+        
+        self.rect = CGRect(x: x, y: y, width: width, height: height)
+        self.angle = angle
+        
+    }
+    
+    init(x:CGFloat, y:CGFloat, width:CGFloat, height:CGFloat){
+        
+        self.rect = CGRect(x: x, y: y, width: width, height: height)
+        
+    }
+    
+    var description: String {
+        return "GZCropInfo:{x:\(self.rect.minX), y:\(self.rect.minY), width:\(self.rect.width), height:\(self.rect.height), angle:\(self.angle)}"
+    }
+    
+    var debugDescription: String {
+        return self.description
+    }
+    
+}
+
 
 struct GZPositionViewMetaData : Equatable {
     
@@ -339,16 +414,8 @@ struct GZPositionViewMetaData : Equatable {
         return self.imageMetaData.image
     }
     
-    var contentSize:CGSize{
-        return self.scrollViewMetaData.contentSize
-    }
-    
-    var contentOffset:CGPoint{
-        return self.scrollViewMetaData.contentOffset
-    }
-    
-    var zoomScale:CGFloat{
-        return self.scrollViewMetaData.zoomScale
+    var cropInfo:GZCropInfo{
+        return self.scrollViewMetaData.cropInfo
     }
     
 }
@@ -379,6 +446,10 @@ struct GZLayoutViewImagesMetaData {
         return self.positionMetaDatas.map { return $0.identifier }
     }
     
+    var cropInfos:[GZCropInfo]{
+        return self.positionMetaDatas.map{ return $0.cropInfo }
+    }
+    
     func image(forPosition identifier:String)->UIImage!{
         
         if let index = find(self.identifiers, identifier) {
@@ -396,7 +467,7 @@ struct GZLayoutViewImagesMetaData {
     }
     
 
-    init(positionViews:[String:GZPositionEditView]){
+    init(positionViews:[String:GZImageEditorPositionView]){
         
         var positionMetaDatas:[GZPositionViewMetaData] = []
         
@@ -412,7 +483,6 @@ struct GZLayoutViewImagesMetaData {
 
 struct GZLayoutViewMetaData{
     
-//    private var content:[NSObject:AnyObject]
     
     var layout:GZLayout
     let imagesMetaData:GZLayoutViewImagesMetaData
@@ -421,6 +491,9 @@ struct GZLayoutViewMetaData{
         return self.imagesMetaData.numberOfImages
     }
     
+    var cropInfos:[GZCropInfo]{
+        return self.imagesMetaData.cropInfos
+    }
     
     private init(layoutView:GZImageLayoutView){
         
@@ -430,11 +503,6 @@ struct GZLayoutViewMetaData{
         
     }
     
-}
-
-
-protocol GZImageLayoutViewDelegate{
-    func layoutViewDidChangeHighlightPosition(layoutView:GZImageLayoutView, didChangeToPosition position:GZPosition?)
 }
 
 class GZImageLayoutView: UIView {
@@ -461,7 +529,7 @@ class GZImageLayoutView: UIView {
                 
                 for positionMetaData in newMetaData.imagesMetaData.positionMetaDatas {
                     
-                    var positionView:GZPositionEditView = self.positionView(forIdentifier: positionMetaData.identifier) as GZPositionEditView
+                    var positionView:GZImageEditorPositionView = self.positionView(forIdentifier: positionMetaData.identifier) as GZImageEditorPositionView
                     positionView.metaData = positionMetaData
                     
                 }
@@ -483,7 +551,7 @@ class GZImageLayoutView: UIView {
         }
     }
     
-    var positionViews:[String:GZPositionEditView] = [:]
+    var positionViews:[String:GZImageEditorPositionView] = [:]
     
     var cameraView:GZCameraView{
         return self.highlighView.cameraView
@@ -621,7 +689,7 @@ class GZImageLayoutView: UIView {
     }
     
 
-    func positionView(forIdentifier identifier:String)->GZPositionView! {
+    func positionView(forIdentifier identifier:String)->GZImageEditorPositionView! {
 
         return self.positionViews[identifier] //filtedPositionViews.first
         
@@ -629,7 +697,7 @@ class GZImageLayoutView: UIView {
     
     func setImage(image:UIImage?, forPosition identifier:String){
         
-        var positionView = self.positionView(forIdentifier: identifier) as? GZPositionEditView
+        var positionView = self.positionView(forIdentifier: identifier)
         
         positionView?.image = image
         
@@ -639,14 +707,14 @@ class GZImageLayoutView: UIView {
     
     func imageForPosition(identifier:String)->UIImage?{
         
-        var positionView = self.positionView(forIdentifier: identifier) as? GZPositionEditView
+        var positionView = self.positionView(forIdentifier: identifier)
         return positionView?.image
         
     }
     
     func imageForPosition(position:GZPosition)->UIImage?{
         
-        var positionView = self.positionView(forIdentifier: position.identifier) as? GZPositionEditView
+        var positionView = self.positionView(forIdentifier: position.identifier)
         return positionView?.image
         
     }
@@ -687,7 +755,7 @@ class GZImageLayoutView: UIView {
         
         for position in layout.positions {
             
-            var positionView = GZPositionEditView(position: position)
+            var positionView = GZImageEditorPositionView(position: position)
             positionView.layoutView = self
             
             if let image = imageMetaData[position.identifier] {
@@ -721,8 +789,6 @@ class GZImageLayoutView: UIView {
         self.bringSubviewToFront(self.highlighView)
         
         self.privateObjectInfo.layout = layout
-        
-//        self.setNeedsLayout()
         
     }
     
@@ -874,38 +940,40 @@ class GZPositionView: UIView {
     
 }
 
-class GZPositionEditView:GZPositionView {
+class GZImageEditorPositionView:GZPositionView {
     
-    let minZoomScale: CGFloat = 1.0
-    let maxZoomScale: CGFloat = 3.0
+    let minZoomScale : CGFloat = 1.0
+    let maxZoomScale : CGFloat = 3.0
     
-    var imageViewRatio: CGFloat = 1.0
+    var imageRatio : CGFloat = 1.0
     
+    private var privateObjectInfo = ObjectInfo()
     
     var metaData:GZPositionViewMetaData{
         
         set{
-            self.imageMetaData = newValue.imageMetaData
-            self.scrollViewMetaData = newValue.scrollViewMetaData
+            
+            self.privateObjectInfo.metaData = newValue
         }
         
         get{
-            return GZPositionViewMetaData(imageMetaData: self.imageMetaData, scrollViewMetaData: self.scrollViewMetaData)
+            
+            self.privateObjectInfo.metaData = GZPositionViewMetaData(imageMetaData: self.imageMetaData, scrollViewMetaData: self.scrollViewMetaData)
+            
+            return self.privateObjectInfo.metaData
         }
     }
     
     var scrollViewMetaData:GZScrollViewMetaData{
         
         set{
-            
             self.scrollView.zoomScale = newValue.zoomScale
             self.scrollView.contentSize = newValue.contentSize
             self.scrollView.contentOffset = newValue.contentOffset
-            
         }
         
         get{
-            return GZScrollViewMetaData(scrollView: self.scrollView)
+            return GZScrollViewMetaData(scrollView: self.scrollView, imageRatio: self.imageRatio)
         }
         
     }
@@ -961,6 +1029,9 @@ class GZPositionEditView:GZPositionView {
         self.addSubview(self.scrollView)
         self.scrollView.addSubview(self.imageView)
         
+        
+        self.scrollView.frame = self.bounds
+        
     }
     
     private override var layoutView:GZImageLayoutView?{
@@ -979,6 +1050,7 @@ class GZPositionEditView:GZPositionView {
     func setImage(image:UIImage?, needResetScrollView reset:Bool){
         
         self.imageView.image = image
+        
         if reset{
             self.resetScrollView(self.scrollView, image: image)
         }
@@ -997,21 +1069,31 @@ class GZPositionEditView:GZPositionView {
             
         }
         
+        
+        
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         
         self.scrollView.frame = self.bounds
-        self.resetScrollView(self.scrollView, image: self.image)
         
+        var metaData = self.privateObjectInfo.metaData ?? self.metaData
+        self.imageMetaData = metaData.imageMetaData
+        self.scrollViewMetaData = metaData.scrollViewMetaData
+        
+    }
+    
+    
+    struct ObjectInfo {
+        var metaData:GZPositionViewMetaData! = nil
     }
     
 }
 
 //MARK: - Crop & Resize support
 
-extension GZPositionEditView : UIScrollViewDelegate {
+extension GZImageEditorPositionView : UIScrollViewDelegate {
     
     private func resetScrollView(scrollView:UIScrollView, image:UIImage?){
         
@@ -1026,16 +1108,17 @@ extension GZPositionEditView : UIScrollViewDelegate {
             let vaildImageHeight = vaildImage.size.height
             
             
-            
             //看scrollView的 width > height or width < height 決定那一邊要為基準
             
             var targetSize = scrollView.contentSize
+            
+            var ratio:CGFloat = 1.0
             
             if scrollViewWidth > scrollViewHeight {
                 
                 
                 //以scrollView的width為基準計算image原始size與scrollView size的ratio，以便算出相對應的height
-                let ratio = scrollViewWidth / vaildImageWidth
+                ratio = scrollViewWidth / vaildImageWidth
                 
                 //
                 targetSize = CGSize(width:scrollViewWidth , height: vaildImageHeight * ratio)
@@ -1044,7 +1127,7 @@ extension GZPositionEditView : UIScrollViewDelegate {
             }else if scrollViewWidth < scrollViewHeight {
                 
                 //以scrollView的height為基準計算image原始size與scrollView size的ratio，以便算出相對應的width
-                let ratio = scrollViewHeight / vaildImageHeight
+                ratio = scrollViewHeight / vaildImageHeight
                 
                 //
                 targetSize = CGSize(width:vaildImageWidth * ratio , height: scrollViewHeight)
@@ -1056,7 +1139,7 @@ extension GZPositionEditView : UIScrollViewDelegate {
                 if vaildImageWidth > vaildImageHeight {
                     
                     //以scrollView的width為基準計算image原始size與scrollView size的ratio，以便算出相對應的height
-                    let ratio = scrollViewHeight / vaildImageHeight
+                    ratio = scrollViewHeight / vaildImageHeight
                     
                     //
                     targetSize = CGSize(width:vaildImageWidth * ratio , height: scrollViewHeight)
@@ -1064,7 +1147,7 @@ extension GZPositionEditView : UIScrollViewDelegate {
                 }else{
                     
                     //以scrollView的width為基準計算image原始size與scrollView size的ratio，以便算出相對應的height
-                    let ratio = scrollViewWidth / vaildImageWidth
+                    ratio = scrollViewWidth / vaildImageWidth
                     
                     //
                     targetSize = CGSize(width:scrollViewWidth , height: vaildImageHeight * ratio)
@@ -1075,6 +1158,7 @@ extension GZPositionEditView : UIScrollViewDelegate {
                 
             }
             
+            self.imageRatio = ratio
             //
             scrollView.contentSize = targetSize
             
@@ -1096,7 +1180,7 @@ extension GZPositionEditView : UIScrollViewDelegate {
         
         scrollView.zoomScale = 1.0
         scrollView.contentOffset = CGPointZero
-        scrollView.contentSize = scrollView.frame.size
+        scrollView.contentSize = CGSizeZero
         
     }
     
