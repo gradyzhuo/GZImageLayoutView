@@ -2,7 +2,7 @@
     "identifier":"ONE_SINGLE",
     "positions":[
         {
-            "position":"0",
+            "identifier":"position_0",
             "points":[
                 {"type":"line","point":[0,0]},
                 {"type":"line","point":[0,1]},

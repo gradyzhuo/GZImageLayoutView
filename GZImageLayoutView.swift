@@ -174,7 +174,7 @@ class GZPosition {
     convenience init(dataDict:[NSObject:AnyObject]) {
         
         var points:[GZLayoutPointUnit] = (dataDict["points"] as [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
-        var identifier:String = dataDict["position"] as String
+        var identifier:String = dataDict["identifier"] as String
         
         self.init(identifier:identifier, layoutPoints:points )
         
@@ -331,12 +331,12 @@ struct GZScrollViewMetaData {
         
         var scrollViewSize = self.frame.size
         
-        var cropRatio = zoomScale / imageRatio
+//        var cropRatio = zoomScale / imageRatio
         
-        var cropWidth = scrollViewSize.width / cropRatio
-        var cropHeight = scrollViewSize.height / cropRatio
-        var cropX = contentOffset.x / cropRatio
-        var cropY = contentOffset.y / cropRatio
+        var cropWidth = scrollViewSize.width / zoomScale / imageRatio
+        var cropHeight = scrollViewSize.height / zoomScale / imageRatio
+        var cropX = contentOffset.x / zoomScale / imageRatio
+        var cropY = contentOffset.y / zoomScale / imageRatio
         
         return GZCropInfo(x: cropX, y: cropY, width: cropWidth, height: cropHeight)
         

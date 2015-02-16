@@ -2,7 +2,7 @@
     "identifier":"TWO_VERTICAL",
     "positions":[
         {
-            "position":"0",
+            "identifier":"position_0",
             "points":[
                 {"type":"line","point":[0,0]},
                 {"type":"line","point":[0,0.5]},
@@ -11,7 +11,7 @@
             ]
         },
         {
-            "position":"1",
+            "identifier":"position_1",
             "points":[
                 {"type":"line","point":[0,0.5]},
                 {"type":"line","point":[0,1]},
