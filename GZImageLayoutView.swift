@@ -426,7 +426,7 @@ func ==(lhs: GZPositionViewMetaData, rhs: GZPositionViewMetaData) -> Bool{
 
 struct GZLayoutViewImagesMetaData {
     
-    let positionMetaDatas:[GZPositionViewMetaData]
+    var positionMetaDatas:[GZPositionViewMetaData]
     
     private var content:[String:UIImage]{
         
@@ -485,7 +485,7 @@ struct GZLayoutViewMetaData{
     
     
     var layout:GZLayout
-    let imagesMetaData:GZLayoutViewImagesMetaData
+    var imagesMetaData:GZLayoutViewImagesMetaData
     
     var numerOfPositions:Int{
         return self.imagesMetaData.numberOfImages

@@ -164,8 +164,6 @@ class GZCameraView: UIView {
     var flashMode:AVCaptureFlashMode = AVCaptureFlashMode.Auto {
         didSet{
             
-            
-            
             if let currentCaptureDevice = self.currentCaptureDevice {
                 
                 if self.flashAvailable {
@@ -257,6 +255,7 @@ class GZCameraView: UIView {
         
         self.changeDevicePosition()
 //        self.openCamera()
+        self.flashMode = AVCaptureFlashMode.Auto
         
     }
     

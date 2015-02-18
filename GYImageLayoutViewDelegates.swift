@@ -1,5 +1,5 @@
 //
-//  GYImageLayoutViewDelegates.swift
+//  GZImageLayoutViewDelegates.swift
 //  Flingy
 //
 //  Created by Grady Zhuo on 2/13/15.
