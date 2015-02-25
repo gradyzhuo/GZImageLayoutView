@@ -9,49 +9,7 @@
 import UIKit
 import AVFoundation
 
-
-protocol Keyable:Hashable, Equatable{
-    
-}
-
-extension CGPoint {
-    
-    private init(pointOfLayout point:[CGFloat], multiple value:CGFloat = 1){
-        
-        self.x = CGFloat(point[0]) * value
-        self.y = CGFloat(point[1]) * value
-        
-    }
-    
-    private func __pointByMultiple(value:CGSize)->CGPoint{
-        
-        var copy = self
-        copy.x *= value.width
-        copy.y *= value.height
-        
-        return copy
-        
-    }
-    
-    private func __pointByOffset(value:CGPoint)->CGPoint{
-        
-        var copy = self
-        copy.x += value.x
-        copy.y += value.y
-        
-        
-        return copy
-        
-    }
-    
-    var __flipPoint:CGPoint{
-        return CGPoint(x: -self.x, y: -self.y)
-    }
-    
-}
-
-
-enum GZLayoutPointUnit{
+enum GZLayoutPointUnit:Printable{
     
     init(dataDict:[NSObject:AnyObject]) {
         
@@ -65,7 +23,10 @@ enum GZLayoutPointUnit{
     
     init(type:String, point:[CGFloat]){
         
-        var point = CGPoint(pointOfLayout: point)
+        var x = CGFloat(point[0])
+        var y = CGFloat(point[1])
+        
+        var point = CGPoint(x: x, y: y)
         self.init(type:type, point:point)
         
     }
@@ -73,8 +34,11 @@ enum GZLayoutPointUnit{
     init(type:String, point:CGPoint){
         
         switch type {
+        case "move":
+            self = GZLayoutPointUnit.Move(toPoint: point)
+            
         case "line":
-            self = GZLayoutPointUnit.Line(point)
+            self = GZLayoutPointUnit.Line(toPoint: point)
             
             /* 曲線暫時不支援       case "curve":
             
@@ -91,21 +55,116 @@ enum GZLayoutPointUnit{
     }
     
     case Undefined
-    case Line(CGPoint)
-    //    case Curve(CGPoint,CGPoint,CGPoint)
+    case Move(toPoint:CGPoint)
+    case Line(toPoint:CGPoint)
+    case Curve(toPoint:CGPoint,controlPoint1:CGPoint,controlPoint2:CGPoint)
     
-    var point:CGPoint{
+    func isMove()->Bool{
         switch self {
-            
-        case .Line(var point):
-            return point
-            //        case .Curve(var point, var control1, var control2):
-            //            return point
-        case .Undefined:
-            return CGPoint()
+        case let .Move:
+            return true
+        default:
+            return false
         }
     }
     
+    func isLine()->Bool{
+        switch self {
+        case .Line:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    func isCurve()->Bool{
+        switch self {
+        case .Curve:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    func convertToMoveUnit()->GZLayoutPointUnit{
+        switch self {
+        case let .Move(toPoint: point):
+            return self
+        case let .Line(toPoint: point):
+            return GZLayoutPointUnit.Move(toPoint: point)
+        case let .Curve(toPoint:point, controlPoint1:controlPoint1, controlPoint2:controlPoint2):
+            return GZLayoutPointUnit.Move(toPoint: point)
+        default:
+            return GZLayoutPointUnit.Move(toPoint: CGPoint())
+        }
+    }
+    
+    private var point:CGPoint{
+        get{
+            switch self {
+            case let .Move(toPoint: point):
+                return point
+            case let .Line(toPoint: point):
+                return point
+            case let .Curve(toPoint:point, controlPoint1:controlPoint1, controlPoint2:controlPoint2):
+                return point
+                
+            default:
+                return CGPoint()
+            }
+        }
+    }
+    
+    private var controlPoint1:CGPoint?{
+        get{
+            switch self {
+            case let .Curve(toPoint:point,controlPoint1:controlPoint1,controlPoint2:controlPoint2):
+                return controlPoint1
+            default:
+                return nil
+            }
+        }
+    }
+    
+    private var controlPoint2:CGPoint?{
+        get{
+            switch self {
+            case let .Curve(toPoint:point,controlPoint1:controlPoint1,controlPoint2:controlPoint2):
+                return controlPoint2
+            default:
+                return nil
+            }
+        }
+    }
+    
+    
+    func applyToBezierPath(bezierPath:UIBezierPath){
+        switch self {
+        case let .Move(toPoint: point):
+            bezierPath.moveToPoint(point)
+        case let .Line(toPoint: point):
+            bezierPath.addLineToPoint(point)
+        case let .Curve(toPoint:point,controlPoint1:controlPoint1,controlPoint2:controlPoint2):
+            bezierPath.addCurveToPoint(point, controlPoint1: controlPoint1, controlPoint2: controlPoint2)
+            
+        case .Undefined:
+            println("Error: illegal Point Unit:\(self)")
+        }
+    }
+    
+    
+    var description:String{
+        switch self {
+        case .Move:
+            return "Move"
+        case .Line:
+            return "Line"
+        case .Curve:
+            return "Curve"
+        case .Undefined:
+            return "Undefined"
+        }
+    }
 }
 
 
@@ -123,39 +182,37 @@ class GZPosition {
     }
     
     var layoutPoints:[GZLayoutPointUnit]{
-        
         return self.privateObjectInfo.layoutPoints
-        
-        
     }
     
     private class func fullPosition()->GZPosition {
         
-        var leftTopPointUnit = GZLayoutPointUnit.Line(CGPoint(x: 0, y: 0))
-        var leftBottomPointUnit = GZLayoutPointUnit.Line(CGPoint(x: 0, y: 1))
-        var rightBottomPointUnit = GZLayoutPointUnit.Line(CGPoint(x: 1, y: 1))
-        var rightTopPointUnit = GZLayoutPointUnit.Line(CGPoint(x: 1, y: 0))
+        var moveToPointUnit = GZLayoutPointUnit.Move(toPoint: CGPoint(x: 0, y: 0))
+//        var leftTopPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 0, y: 0))
+        var leftBottomPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 0, y: 1))
+        var rightBottomPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 1, y: 1))
+        var rightTopPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 1, y: 0))
         
-        return GZPosition(identifier: kGZPositionIdentifierDefaultFull, layoutPoints: [leftTopPointUnit, leftBottomPointUnit, rightBottomPointUnit, rightTopPointUnit])
+        return GZPosition(identifier: kGZPositionIdentifierDefaultFull, layoutPoints: [moveToPointUnit, leftBottomPointUnit, rightBottomPointUnit, rightTopPointUnit], closePath:true)
         
+    }
+    
+    var shouldClosePath:Bool{
+        return self.privateObjectInfo.shouldClosePath
     }
     
     var bezierPath:UIBezierPath {
         
-        var firstPoint = self.layoutPoints.first?.point ?? CGPoint()
-        
-        var bezier = UIBezierPath()
-        bezier.moveToPoint(firstPoint)
-        
-        var filtedPoint = self.layoutPoints.filter{ return $0.point != firstPoint }
-        
-        bezier = filtedPoint.reduce(bezier, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
-            bezier.addLineToPoint(pointUnit.point)
-            return bezier
+        self.privateObjectInfo.layoutPoints[0] = self.layoutPoints[0].convertToMoveUnit()
+
+        var bezier = self.layoutPoints.reduce(UIBezierPath(), combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
+            pointUnit.applyToBezierPath(bezierPath)
+            return bezierPath
         })
-        
-        
-        bezier.closePath()
+
+        if self.shouldClosePath {
+            bezier.closePath()
+        }
         
         return bezier
     }
@@ -166,7 +223,7 @@ class GZPosition {
         var bezierPath = UIBezierPath()
         bezierPath.appendPath(self.bezierPath)
         
-        bezierPath.applyTransform(CGAffineTransformMakeTranslation(firstPoint.__flipPoint.x, firstPoint.__flipPoint.y))
+        bezierPath.applyTransform(CGAffineTransformMakeTranslation(-firstPoint.x, -firstPoint.y))
         
         return bezierPath
     }
@@ -176,15 +233,17 @@ class GZPosition {
         var points:[GZLayoutPointUnit] = (dataDict["points"] as [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
         var identifier:String = dataDict["identifier"] as String
         
-        self.init(identifier:identifier, layoutPoints:points )
+        var shouldClosePath = dataDict["closePath"] as Bool
+        
+        self.init(identifier:identifier, layoutPoints:points, closePath: shouldClosePath)
         
     }
     
-    init(identifier:String, layoutPoints:[GZLayoutPointUnit]){
+    init(identifier:String, layoutPoints:[GZLayoutPointUnit], closePath:Bool){
         
         self.privateObjectInfo.identifier = identifier
         self.privateObjectInfo.layoutPoints = layoutPoints
-        
+        self.privateObjectInfo.shouldClosePath = closePath
     }
     
     func frame(multiple:CGSize)->CGRect{
@@ -195,7 +254,7 @@ class GZPosition {
         
         var identifier:String = kGZPositionIdentifierDefaultFull
         var layoutPoints:[GZLayoutPointUnit] = []
-        
+        var shouldClosePath:Bool = true
     }
     
     
@@ -220,14 +279,6 @@ class GZLayout {
     }
     
     private var privateObjectInfo:ObjectInfo = ObjectInfo()
-    
-    //    class func emptyLayout()->GZLayout{
-    //
-    //        var layout = GZLayout(json: nil)
-    //
-    //
-    //        return
-    //    }
     
     class func fullLayout()->GZLayout {
         
@@ -301,11 +352,6 @@ class GZLayout {
     
     
 }
-
-
-let GZImageLayoutViewMetaDataLayoutKey = "GZImageLayoutViewMetaDataLayoutKey"
-let GZImageLayoutViewMetaDataImagesKey = "GZImageLayoutViewMetaDataImagesKey"
-
 
 struct GZScrollViewMetaData {
     
@@ -593,8 +639,15 @@ class GZImageLayoutView: UIView {
             var borderBezierPath = UIBezierPath()
             
             for position in self.layout.positions {
-                borderBezierPath.appendPath(position.bezierPath)
+                
+                borderBezierPath = position.layoutPoints.reduce(borderBezierPath, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
+                    pointUnit.applyToBezierPath(bezierPath)
+                    return bezierPath
+                })
+                
             }
+            
+            borderBezierPath.closePath()
             
             return borderBezierPath
         }
@@ -773,17 +826,6 @@ class GZImageLayoutView: UIView {
         }else{
             self.changeCurrentPosition(layout.positions.first)
         }
-        
-/* 先別刪 要看之後還會不會自動layout
-//        for i in 0 ..< self.positionViews.count {
-//            
-//            var positionView = self.positionViews[i]
-//            
-//            positionView.position = layout.positions[i]
-//            positionView.applyMask(self.frame.size)
-//            
-//        }
-*/
         
         self.bringSubviewToFront(self.borderView)
         self.bringSubviewToFront(self.highlighView)
