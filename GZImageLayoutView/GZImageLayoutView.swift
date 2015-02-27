@@ -456,7 +456,7 @@ struct GZPositionViewMetaData : Equatable {
         return self.imageMetaData.identifier
     }
     
-    var image:UIImage{
+    var image:UIImage?{
         return self.imageMetaData.image
     }
     
@@ -467,7 +467,8 @@ struct GZPositionViewMetaData : Equatable {
 }
 
 func ==(lhs: GZPositionViewMetaData, rhs: GZPositionViewMetaData) -> Bool{
-    return (lhs.identifier == rhs.identifier) && lhs.image.isEqual(rhs.image)
+    var lhsImage = lhs.image ?? UIImage()
+    return (lhs.identifier == rhs.identifier) && lhsImage.isEqual(rhs.image)
 }
 
 struct GZLayoutViewImagesMetaData {
@@ -502,6 +503,19 @@ struct GZLayoutViewImagesMetaData {
             
             var positionMetaData = self.positionMetaDatas[index]
             return positionMetaData.image
+            
+        }
+        
+        return nil
+    }
+    
+    
+    func positionViewMetaData(forPosition identifier:String)->GZPositionViewMetaData!{
+        
+        if let index = find(self.identifiers, identifier) {
+            
+            var positionMetaData = self.positionMetaDatas[index]
+            return positionMetaData
             
         }
         
@@ -569,7 +583,7 @@ class GZImageLayoutView: UIView {
                 
                 var layout:GZLayout = newMetaData.layout
                 
-                self.privateObjectInfo.imageMetaData = newMetaData.imagesMetaData.content
+                self.privateObjectInfo.imageMetaDataContent = newMetaData.imagesMetaData.content
                 
                 self.relayout(layout)
                 
@@ -796,7 +810,8 @@ class GZImageLayoutView: UIView {
     
     func relayout(layout:GZLayout){
         
-        var imageMetaData = self.privateObjectInfo.imageMetaData
+        
+        var imagesMetaDataContent = self.privateObjectInfo.imageMetaDataContent
         
         for (identifier,positionView) in self.positionViews{
             
@@ -808,14 +823,15 @@ class GZImageLayoutView: UIView {
         
         for position in layout.positions {
             
+            var identifier = position.identifier
+            
             var positionView = GZImageEditorPositionView(position: position)
+            self.addSubview(positionView)
+            
             positionView.layoutView = self
             
-            if let image = imageMetaData[position.identifier] {
-                positionView.image = image
-            }
-            
-            self.addSubview(positionView)
+            positionView.applyMask(self.bounds.size)
+            positionView.image = imagesMetaDataContent[identifier]//positionViewMetaData.image
             
             self.positionViews[position.identifier] = positionView
             
@@ -861,7 +877,7 @@ class GZImageLayoutView: UIView {
     private struct ObjectInfo{
         
         var layout:GZLayout = GZLayout.fullLayout()
-        var imageMetaData:[String:UIImage] = [:]
+        var imageMetaDataContent:[String:UIImage] = [:]
         var currentPosition:GZPosition! = nil
         
     }
@@ -1099,7 +1115,7 @@ class GZImageEditorPositionView:GZPositionView {
         
         if let parentLayoutView = self.layoutView {
             
-            var imageMetaData = parentLayoutView.privateObjectInfo.imageMetaData
+            var imageMetaData = parentLayoutView.privateObjectInfo.imageMetaDataContent
             
             if let newImage = image {
                 imageMetaData[self.identifier] = newImage
@@ -1107,7 +1123,7 @@ class GZImageEditorPositionView:GZPositionView {
                 imageMetaData.removeValueForKey(self.identifier)
             }
             
-            parentLayoutView.privateObjectInfo.imageMetaData = imageMetaData
+            parentLayoutView.privateObjectInfo.imageMetaDataContent = imageMetaData
             
         }
         
