@@ -482,9 +482,10 @@ class GZImageLayoutView: UIView {
             var identifier = position.identifier
             
             var positionView = GZImageEditorPositionView(position: position)
+            positionView.layoutView = self
+            
             self.addSubview(positionView)
             
-            positionView.layoutView = self
             
             positionView.applyMask(self.bounds.size)
             positionView.image = imagesMetaDataContent[identifier]//positionViewMetaData.image
@@ -925,9 +926,11 @@ extension GZImageEditorPositionView : UIScrollViewDelegate {
 
 class GZHighlightView: GZPositionView {
     
+    var componentConstraints:[String:[AnyObject]] = [:]
+    
     private lazy var borderView:GZHighlightBorderView = {
         var borderView = GZHighlightBorderView()
-        self.addSubview(borderView)
+        borderView.setTranslatesAutoresizingMaskIntoConstraints(false)
         return borderView
     }()
     
@@ -935,7 +938,7 @@ class GZHighlightView: GZPositionView {
         
         var cameraView = GZCameraView()
         cameraView.userInteractionEnabled = false
-        self.addSubview(cameraView)
+        cameraView.setTranslatesAutoresizingMaskIntoConstraints(false)
         
         return cameraView
     }()
@@ -952,19 +955,67 @@ class GZHighlightView: GZPositionView {
         
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
+    override func configure(position: GZPosition!) {
+        super.configure(position)
+        
+        self.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         
         self.userInteractionEnabled = false
-        self.cameraView.frame = self.bounds
+        
+        self.addSubview(self.cameraView)
+        self.addSubview(self.borderView)
+        
+        self.setNeedsUpdateConstraints()
         
     }
+    
     
     override func applyMask(size: CGSize) {
         super.applyMask(size)
         
         self.borderView.bezierPath = self.maskBezierPath
-        self.borderView.frame = self.bounds
+        self.setNeedsLayout()
+        
+    }
+    
+    
+    override func updateConstraints() {
+        super.updateConstraints()
+        
+        self.removeConstraints(self.componentConstraints["CameraView"] ?? [])
+        self.removeConstraints(self.componentConstraints["BorderView"] ?? [])
+        
+        var constraints = [AnyObject]()
+        
+        var metrics:[NSObject:AnyObject] = [:]
+        metrics["super_margin_left"] = self.layoutMargins.left
+        metrics["super_margin_right"] = self.layoutMargins.right
+        metrics["super_margin_top"] = self.layoutMargins.top
+        metrics["super_margin_bottom"] = self.layoutMargins.bottom
+        
+        var viewsDict:[NSObject:AnyObject] = ["camera_view":self.cameraView, "border_view":self.borderView]
+        
+        var vCameraViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("V:|-super_margin_top-[camera_view]-super_margin_bottom-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
+        var hCameraViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|-super_margin_left-[camera_view]-super_margin_right-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
+        
+        var cameraConstraints = [] + vCameraViewConstraints + hCameraViewConstraints
+
+        
+        self.componentConstraints["CameraView"] = cameraConstraints
+        
+        constraints += cameraConstraints
+        
+        var vBorderViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("V:|-super_margin_top-[border_view]-super_margin_bottom-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
+        var hBorderViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|-super_margin_left-[border_view]-super_margin_right-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
+        
+        var borderConstraints = [] + vBorderViewConstraints + hBorderViewConstraints
+        
+        self.componentConstraints["BorderView"] = borderConstraints
+        
+        constraints += borderConstraints
+        
+        self.addConstraints(constraints)
+        
         
     }
     
