@@ -720,6 +720,7 @@ class GZImageEditorPositionView:GZPositionView {
     private lazy var scrollView:UIScrollView = {
         
         var scrollView = UIScrollView()
+        scrollView.scrollsToTop = false
         scrollView.delegate = self
         
         scrollView.minimumZoomScale = self.minZoomScale
