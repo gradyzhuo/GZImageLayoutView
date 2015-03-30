@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Skytiger Studio. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 enum GZLayoutPointUnit:Printable{
     
