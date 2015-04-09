@@ -55,7 +55,7 @@ struct GZCropInfo:Printable, DebugPrintable{
     
     private let rect:CGRect
     
-    let angle:CGFloat = 0.0
+    let angle:CGFloat
     
     var x:CGFloat{
         return self.rect.minX
@@ -89,7 +89,7 @@ struct GZCropInfo:Printable, DebugPrintable{
     init(x:CGFloat, y:CGFloat, width:CGFloat, height:CGFloat){
         
         self.rect = CGRect(x: x, y: y, width: width, height: height)
-        
+        self.angle = 0
     }
     
     var description: String {
@@ -541,19 +541,20 @@ class GZImageLayoutView: UIView {
     
     //MARK: Touch Event Handler
     
-    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+    
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         super.touchesBegan(touches, withEvent: event)
         
-        var anyTouch = touches.anyObject() as UITouch
+        var anyTouch = touches.first as! UITouch
         var location = anyTouch.locationInView(self)
         
     }
     
     
-    override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
+    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         super.touchesEnded(touches, withEvent: event)
         
-        var anyTouch = touches.anyObject() as UITouch
+        var anyTouch = touches.first as! UITouch
         
         var currentLocation = anyTouch.locationInView(self)
         var previoudLocation = anyTouch.previousLocationInView(self)
@@ -1038,8 +1039,13 @@ class GZHighlightBorderView: UIView {
         }
     }
     
-    override init() {
-        super.init()
+    init() {
+        super.init(frame : CGRect.zeroRect)
+        self.setup()
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
         
         self.setup()
         
@@ -1051,12 +1057,7 @@ class GZHighlightBorderView: UIView {
         self.setup()
     }
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        
-        self.setup()
-        
-    }
+    
     
     override func layoutSubviews() {
         super.layoutSubviews()

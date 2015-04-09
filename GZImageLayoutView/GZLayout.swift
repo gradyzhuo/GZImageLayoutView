@@ -12,8 +12,8 @@ enum GZLayoutPointUnit:Printable{
     
     init(dataDict:[NSObject:AnyObject]) {
         
-        var type = dataDict["type"] as String
-        var point = dataDict["point"] as [CGFloat]
+        var type = dataDict["type"] as! String
+        var point = dataDict["point"] as! [CGFloat]
         var control1:[CGFloat]? = dataDict["control1"] as? [CGFloat]
         var control2:[CGFloat]? = dataDict["control2"] as? [CGFloat]
         
@@ -201,10 +201,10 @@ class GZPosition {
     
     convenience init(dataDict:[NSObject:AnyObject]) {
         
-        var points:[GZLayoutPointUnit] = (dataDict["points"] as [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
-        var identifier:String = dataDict["identifier"] as String
+        var points:[GZLayoutPointUnit] = (dataDict["points"] as! [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
+        var identifier:String = dataDict["identifier"] as! String
         
-        var shouldClosePath = dataDict["closePath"] as Bool
+        var shouldClosePath = dataDict["closePath"] as! Bool
         
         self.init(identifier:identifier, layoutPoints:points, closePath: shouldClosePath)
         
@@ -303,8 +303,8 @@ class GZLayout {
     
     convenience init(jsonObject:[String:AnyObject]){
         
-        var identifier:String! = jsonObject["identifier"] as String
-        var originalPositions = jsonObject["positions"] as [[NSObject:AnyObject]]
+        var identifier:String! = jsonObject["identifier"] as! String
+        var originalPositions = jsonObject["positions"] as! [[NSObject:AnyObject]]
         var position:[GZPosition] = originalPositions.map{GZPosition(dataDict: $0)}
         
         self.init(identifier: identifier, positions:position)

@@ -144,7 +144,7 @@ class GZCameraView: UIView {
     lazy var availableCameraDevice:[GZCameraViewDevicePosition:AVCaptureDevice] = {
         
         var deviceList:[GZCameraViewDevicePosition:AVCaptureDevice] = [:]
-        var videoDevices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as [AVCaptureDevice]
+        var videoDevices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
         
         videoDevices.map({ (device:AVCaptureDevice) -> Void in
             
@@ -224,9 +224,8 @@ class GZCameraView: UIView {
         
     }
     
-    override init() {
-        super.init()
-        
+    init() {
+        super.init(frame : CGRect.zeroRect)
         self.configure()
         
     }
@@ -266,7 +265,7 @@ class GZCameraView: UIView {
     
     func changeDevicePosition(position:GZCameraViewDevicePosition = .Back){
         
-        self.captureSession.inputs.map { self.captureSession.removeInput($0 as AVCaptureInput) }
+        self.captureSession.inputs.map { self.captureSession.removeInput($0 as! AVCaptureInput) }
         
         self.currentCaptureDevice = self.availableCameraDevice[position]
         
@@ -306,7 +305,7 @@ class GZCameraView: UIView {
         
     }
     
-    func takePhoto(completionHandler:(imageData:NSData, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
+    func takePhotoImageData(completionHandler:(imageData:NSData, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
         
         
         
