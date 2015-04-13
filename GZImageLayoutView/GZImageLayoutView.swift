@@ -424,8 +424,6 @@ class GZImageLayoutView: UIView {
         
         positionView?.image = image
         
-//        self.privateObjectInfo.imageMetaData[identifier] = image
-        
     }
     
     func imageForPosition(identifier:String)->UIImage?{
@@ -668,6 +666,9 @@ class GZImageEditorPositionView:GZPositionView {
     var metaData:GZPositionViewMetaData{
         
         set{
+            
+            self.imageMetaData = newValue.imageMetaData
+            self.scrollViewMetaData = newValue.scrollViewMetaData
             
             self.privateObjectInfo.metaData = newValue
         }
