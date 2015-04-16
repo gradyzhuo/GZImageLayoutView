@@ -53,47 +53,47 @@ struct GZPositionViewImageMetaData{
 
 struct GZCropInfo:Printable, DebugPrintable{
     
-    private let rect:CGRect
-    
+    let bounds:CGRect
+
     let angle:CGFloat
     
     var x:CGFloat{
-        return self.rect.minX
+        return self.bounds.minX
     }
     
     var y:CGFloat{
-        return self.rect.minY
+        return self.bounds.minY
     }
     
     var width:CGFloat{
-        return self.rect.width
+        return self.bounds.width
     }
     
     var height:CGFloat{
-        return self.rect.height
+        return self.bounds.height
     }
     
     
     init(rect:CGRect, angle:CGFloat){
-        self.rect = rect
+        self.bounds = rect
         self.angle = angle
     }
     
     init(x:CGFloat, y:CGFloat, width:CGFloat, height:CGFloat, angle:CGFloat){
         
-        self.rect = CGRect(x: x, y: y, width: width, height: height)
+        self.bounds = CGRect(x: x, y: y, width: width, height: height)
         self.angle = angle
         
     }
     
     init(x:CGFloat, y:CGFloat, width:CGFloat, height:CGFloat){
         
-        self.rect = CGRect(x: x, y: y, width: width, height: height)
+        self.bounds = CGRect(x: x, y: y, width: width, height: height)
         self.angle = 0
     }
     
     var description: String {
-        return "GZCropInfo:{x:\(self.rect.minX), y:\(self.rect.minY), width:\(self.rect.width), height:\(self.rect.height), angle:\(self.angle)}"
+        return "GZCropInfo:{x:\(self.bounds.minX), y:\(self.bounds.minY), width:\(self.bounds.width), height:\(self.bounds.height), angle:\(self.angle)}"
     }
     
     var debugDescription: String {
