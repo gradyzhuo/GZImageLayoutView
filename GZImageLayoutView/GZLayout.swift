@@ -330,6 +330,24 @@ class GZLayout {
     }
     
     
+    func unitBorderBezierPath()->UIBezierPath{
+        
+        var borderBezierPath = UIBezierPath()
+        
+        for position in self.positions {
+            
+            borderBezierPath = position.layoutPoints.reduce(borderBezierPath, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
+                pointUnit.applyToBezierPath(bezierPath)
+                return bezierPath
+            })
+            
+        }
+        
+        borderBezierPath.closePath()
+
+        return borderBezierPath
+    }
+    
     private struct ObjectInfo{
         var identifier:String! = nil
         var positions:[GZPosition] = []

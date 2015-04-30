@@ -303,25 +303,25 @@ class GZImageLayoutView: UIView {
     
     var highlighView:GZHighlightView = GZHighlightView()
     
-    private var borderBezierPath:UIBezierPath {
-        get{
-            
-            var borderBezierPath = UIBezierPath()
-            
-            for position in self.layout.positions {
-                
-                borderBezierPath = position.layoutPoints.reduce(borderBezierPath, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
-                    pointUnit.applyToBezierPath(bezierPath)
-                    return bezierPath
-                })
-                
-            }
-            
-            borderBezierPath.closePath()
-            
-            return borderBezierPath
-        }
-    }
+//    private var borderBezierPath:UIBezierPath {
+//        get{
+//            
+//            var borderBezierPath = UIBezierPath()
+//            
+//            for position in self.layout.positions {
+//                
+//                borderBezierPath = position.layoutPoints.reduce(borderBezierPath, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
+//                    pointUnit.applyToBezierPath(bezierPath)
+//                    return bezierPath
+//                })
+//                
+//            }
+//            
+//            borderBezierPath.closePath()
+//            
+//            return borderBezierPath
+//        }
+//    }
     
     private lazy var borderView:GZHighlightBorderView = {
         
@@ -380,11 +380,9 @@ class GZImageLayoutView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        var borderBezierPath = UIBezierPath()
-        borderBezierPath.appendPath(self.borderBezierPath)
-        borderBezierPath.applyTransform(CGAffineTransformMakeScale(self.bounds.width, self.bounds.height))
-        
-        self.borderView.bezierPath = borderBezierPath
+
+//        self.borderView.bezierPath = self.borderBezierPath.copy() as! UIBezierPath
+        self.borderView.layout = self.layout
         self.borderView.frame = self.bounds
         
         self.highlighView.applyMask(self.bounds.size)
@@ -623,7 +621,6 @@ class GZPositionView: UIView {
             self.maskBezierPath.appendPath(self.position.maskBezierPath)
             self.maskBezierPath.applyTransform(CGAffineTransformMakeScale(size.width, size.height))
             maskLayer.path = self.maskBezierPath.CGPath
-            
         }
         
         self.layer.mask = maskLayer
@@ -958,6 +955,16 @@ class GZHighlightView: GZPositionView {
         
     }
     
+    var borderWidth:CGFloat {
+        set{
+            self.borderView.borderWidth = newValue
+        }
+        
+        get{
+            return self.borderView.borderWidth
+        }
+    }
+    
     override func configure(position: GZPosition!) {
         super.configure(position)
         
@@ -976,7 +983,7 @@ class GZHighlightView: GZPositionView {
     override func applyMask(size: CGSize) {
         super.applyMask(size)
         
-        self.borderView.bezierPath = self.maskBezierPath
+//        self.borderView.bezierPath = self.maskBezierPath
         self.setNeedsLayout()
         
     }
@@ -1028,17 +1035,19 @@ class GZHighlightView: GZPositionView {
 /** 主要呈現出外框用 */
 class GZHighlightBorderView: UIView {
     
+    var borderWidth:CGFloat = 2.0{
+        didSet{
+            self.setNeedsDisplay()
+        }
+    }
+    
     var borderColor:UIColor = UIColor.blackColor(){
         didSet{
             self.setNeedsDisplay()
         }
     }
     
-    var bezierPath:UIBezierPath = UIBezierPath(){
-        didSet{
-            self.setNeedsDisplay()
-        }
-    }
+    var layout:GZLayout = GZLayout.fullLayout()
     
     init() {
         super.init(frame : CGRect.zeroRect)
@@ -1075,11 +1084,17 @@ class GZHighlightBorderView: UIView {
     
     
     override func drawRect(rect: CGRect) {
+        let halfBorderWidth = self.borderWidth * 0.5
+        let borderBeizerPath = self.layout.unitBorderBezierPath()
         
-        var borderBeizerPath = UIBezierPath()
-        borderBeizerPath.appendPath(self.bezierPath)
+        borderBeizerPath.lineWidth = self.borderWidth
         
-        borderBeizerPath.lineWidth = 3.0
+        var transform = CGAffineTransformMakeTranslation(halfBorderWidth, halfBorderWidth)
+        transform = CGAffineTransformScale(transform, self.bounds.width-self.borderWidth, self.bounds.height-self.borderWidth)
+        borderBeizerPath.applyTransform(transform)
+        
+        
+        
         self.borderColor.setStroke()
         borderBeizerPath.stroke()
         
