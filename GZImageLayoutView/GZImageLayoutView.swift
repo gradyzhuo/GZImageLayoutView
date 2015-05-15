@@ -9,6 +9,8 @@
 import UIKit
 import AVFoundation
 
+
+
 struct GZScrollViewMetaData {
     
     var contentSize:CGSize
@@ -268,6 +270,15 @@ class GZImageLayoutView: UIView {
     }
     
     var positionViews:[String:GZImageEditorPositionView] = [:]
+    var positionViewDelegate:GZImageEditorPositionViewDelegate?{
+        didSet{
+            for (identifier, positionView) in self.positionViews{
+                positionView.delegate = positionViewDelegate
+            }
+        }
+    }
+    
+    
     
     var cameraView:GZCameraView{
         return self.highlighView.cameraView
@@ -339,6 +350,28 @@ class GZImageLayoutView: UIView {
         
         get{
             return self.borderView.borderColor
+        }
+        
+    }
+    
+    var borderHidden:Bool = false {
+        didSet{
+            self.setBorderHidden(borderHidden)
+        }
+    }
+    
+    func setBorderHidden(borderHidden:Bool, animated:Bool = false){
+        
+        let handler = { () in
+            
+            self.borderView.alpha = borderHidden ? 0.0 : 1.0
+            
+        }
+        
+        if animated {
+            UIView.animateWithDuration(0.3, animations: handler)
+        }else{
+            handler()
         }
         
     }
@@ -479,7 +512,7 @@ class GZImageLayoutView: UIView {
             
             var positionView = GZImageEditorPositionView(position: position)
             positionView.layoutView = self
-            
+            positionView.delegate = self.positionViewDelegate
             self.addSubview(positionView)
             
             
@@ -660,6 +693,8 @@ class GZImageEditorPositionView:GZPositionView {
     
     private var privateObjectInfo = ObjectInfo()
     
+    var delegate:GZImageEditorPositionViewDelegate?
+    
     var metaData:GZPositionViewMetaData{
         
         set{
@@ -808,7 +843,7 @@ class GZImageEditorPositionView:GZPositionView {
 
 //MARK: - Crop & Resize support
 
-extension GZImageEditorPositionView : UIScrollViewDelegate {
+extension GZImageEditorPositionView {
     
     private func resetScrollView(scrollView:UIScrollView, image:UIImage?){
         
@@ -900,26 +935,86 @@ extension GZImageEditorPositionView : UIScrollViewDelegate {
     }
     
     
+}
+
+
+extension GZImageEditorPositionView:UIScrollViewDelegate{
     //MARK: scroll view delegate
     internal func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
         return self.imageView
     }
     
-    func scrollViewDidZoom(scrollView: UIScrollView) {
-        println(println("scrollViewDidZoom:\(scrollView.zoomScale)"))
+    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        self.delegate?.scrollViewDidEndDecelerating?(scrollView)
     }
     
-    func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
-        println("scrollViewWillBeginZooming:\(scrollView.zoomScale)")
-        
+    func scrollViewDidEndDragging(scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        self.delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+    }
+    
+    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+        self.delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
     }
     
     func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
-        println("scrollViewDidEndZooming:\(scrollView.zoomScale)")
+        
+        self.delegate?.imageEditorPositionViewDidEndEditByZooming(self)
+        self.delegate?.scrollViewDidEndZooming?(scrollView, withView: view, atScale: scale)
+        
+    }
+    
+    func scrollViewDidScroll(scrollView: UIScrollView) {
+        self.delegate?.imageEditorPositionViewDidEditByScrolling(self)
+        self.delegate?.scrollViewDidScroll?(scrollView)
+    }
+    
+    func scrollViewDidZoom(scrollView: UIScrollView) {
+        self.delegate?.imageEditorPositionViewDidEditByZooming(self)
+        self.delegate?.scrollViewDidZoom?(scrollView)
+    }
+    
+    func scrollViewShouldScrollToTop(scrollView: UIScrollView) -> Bool {
+        return false
+    }
+    
+//    func scrollViewDidScrollToTop(scrollView: UIScrollView) {
+//        
+//    }
+    
+    func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
+        self.delegate?.scrollViewWillBeginDecelerating?(scrollView)
+    }
+    
+    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
+        self.delegate?.imageEditorPositionViewWillBeginEditing(self)
+        self.delegate?.scrollViewWillBeginDragging?(scrollView)
+    }
+    
+    func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
+        self.delegate?.scrollViewWillBeginZooming?(scrollView, withView: view)
+    }
+    
+    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        
+        var metaData = self.scrollViewMetaData
+        metaData.contentOffset = targetContentOffset.memory
+        
+        self.delegate?.imageEditorPositionViewWillEndEditing(self, targetScrollViewMetaData: metaData)
+        self.delegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
     }
     
     
+    
+    
+    
+    
+    
+    
+    
+    
 }
+
+
 
 
 //MARK: - GZHighlightView
@@ -1102,3 +1197,4 @@ class GZHighlightBorderView: UIView {
     }
     
 }
+
