@@ -10,7 +10,6 @@ import UIKit
 import AVFoundation
 
 
-
 struct GZScrollViewMetaData {
     
     var contentSize:CGSize
@@ -751,15 +750,15 @@ class GZImageEditorPositionView:GZPositionView {
 
     }
     
-    private lazy var scrollView:UIScrollView = {
+    private lazy var scrollView:GZImageCropperScrollView = {
         
-        var scrollView = UIScrollView()
+        var scrollView = GZImageCropperScrollView(imageEditorPositionView: self)
         scrollView.scrollsToTop = false
-        scrollView.delegate = self
+//        scrollView.delegate = self
+        scrollView.delaysContentTouches = false
         
         scrollView.minimumZoomScale = self.minZoomScale
         scrollView.maximumZoomScale = self.maxZoomScale
-        
         
         return scrollView
     }()
@@ -839,7 +838,29 @@ class GZImageEditorPositionView:GZPositionView {
         var metaData:GZPositionViewMetaData! = nil
     }
     
+
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+        super.touchesBegan(touches, withEvent: event)
+        
+        if let touch = touches.first as? UITouch {
+            let point = touch.locationInView(self)
+            
+            let hitView = self.hitTest(point, withEvent: event)
+            
+            if hitView == self.scrollView {
+                
+                self.delegate?.imageEditorPositionViewWillBeginEditing(self)
+                
+            }
+            
+        }
+        
+        
+        
+    }
+    
 }
+
 
 //MARK: - Crop & Resize support
 
@@ -939,69 +960,69 @@ extension GZImageEditorPositionView {
 
 
 extension GZImageEditorPositionView:UIScrollViewDelegate{
-    //MARK: scroll view delegate
-    internal func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
-        return self.imageView
-    }
-    
-    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
-        self.delegate?.scrollViewDidEndDecelerating?(scrollView)
-    }
-    
-    func scrollViewDidEndDragging(scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        self.delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
-    }
-    
-    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
-        self.delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
-    }
-    
-    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
-        
-        self.delegate?.imageEditorPositionViewDidEndEditByZooming(self)
-        self.delegate?.scrollViewDidEndZooming?(scrollView, withView: view, atScale: scale)
-        
-    }
-    
-    func scrollViewDidScroll(scrollView: UIScrollView) {
-        self.delegate?.imageEditorPositionViewDidEditByScrolling(self)
-        self.delegate?.scrollViewDidScroll?(scrollView)
-    }
-    
-    func scrollViewDidZoom(scrollView: UIScrollView) {
-        self.delegate?.imageEditorPositionViewDidEditByZooming(self)
-        self.delegate?.scrollViewDidZoom?(scrollView)
-    }
-    
-    func scrollViewShouldScrollToTop(scrollView: UIScrollView) -> Bool {
-        return false
-    }
-    
-//    func scrollViewDidScrollToTop(scrollView: UIScrollView) {
+//    //MARK: scroll view delegate
+//    internal func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
+//        return self.imageView
+//    }
+//    
+//    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+//        self.delegate?.scrollViewDidEndDecelerating?(scrollView)
+//    }
+//    
+//    func scrollViewDidEndDragging(scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+//        self.delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+//    }
+//    
+//    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+//        self.delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
+//    }
+//    
+//    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
+//        
+//        self.delegate?.imageEditorPositionViewDidEndEditByZooming(self)
+//        self.delegate?.scrollViewDidEndZooming?(scrollView, withView: view, atScale: scale)
 //        
 //    }
-    
-    func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
-        self.delegate?.scrollViewWillBeginDecelerating?(scrollView)
-    }
-    
-    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
-        self.delegate?.imageEditorPositionViewWillBeginEditing(self)
-        self.delegate?.scrollViewWillBeginDragging?(scrollView)
-    }
-    
-    func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
-        self.delegate?.scrollViewWillBeginZooming?(scrollView, withView: view)
-    }
-    
-    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        
-        var metaData = self.scrollViewMetaData
-        metaData.contentOffset = targetContentOffset.memory
-        
-        self.delegate?.imageEditorPositionViewWillEndEditing(self, targetScrollViewMetaData: metaData)
-        self.delegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
-    }
+//    
+//    func scrollViewDidScroll(scrollView: UIScrollView) {
+//        self.delegate?.imageEditorPositionViewDidEditByScrolling(self)
+//        self.delegate?.scrollViewDidScroll?(scrollView)
+//    }
+//    
+//    func scrollViewDidZoom(scrollView: UIScrollView) {
+//        self.delegate?.imageEditorPositionViewDidEditByZooming(self)
+//        self.delegate?.scrollViewDidZoom?(scrollView)
+//    }
+//    
+//    func scrollViewShouldScrollToTop(scrollView: UIScrollView) -> Bool {
+//        return false
+//    }
+//    
+////    func scrollViewDidScrollToTop(scrollView: UIScrollView) {
+////        
+////    }
+//    
+//    func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
+//        self.delegate?.imageEditorPositionViewWillBeginEditing(self)
+//        self.delegate?.scrollViewWillBeginDecelerating?(scrollView)
+//    }
+//    
+//    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
+//        self.delegate?.scrollViewWillBeginDragging?(scrollView)
+//    }
+//    
+//    func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
+//        self.delegate?.scrollViewWillBeginZooming?(scrollView, withView: view)
+//    }
+//    
+//    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+//        
+//        var metaData = self.scrollViewMetaData
+//        metaData.contentOffset = targetContentOffset.memory
+//        
+//        self.delegate?.imageEditorPositionViewWillEndEditing(self, targetScrollViewMetaData: metaData)
+//        self.delegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
+//    }
     
     
     
@@ -1198,3 +1219,79 @@ class GZHighlightBorderView: UIView {
     
 }
 
+
+//
+extension GZImageCropperScrollView {
+    
+    //MARK: scroll view delegate
+    internal func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
+        return self.imageEditorPositionView.imageView
+    }
+    
+    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        self.imageEditorPositionView.delegate?.scrollViewDidEndDecelerating?(scrollView)
+    }
+    
+    func scrollViewDidEndDragging(scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        self.imageEditorPositionView.delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
+    }
+    
+    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+        self.imageEditorPositionView.delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
+    }
+    
+    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
+        
+        
+        if let imageEditorPositionView = self.imageEditorPositionView {
+            imageEditorPositionView.delegate?.imageEditorPositionViewDidEndEditByZooming(imageEditorPositionView)
+            imageEditorPositionView.delegate?.scrollViewDidEndZooming?(scrollView, withView: view, atScale: scale)
+        }
+
+        
+        
+    }
+    
+    func scrollViewDidScroll(scrollView: UIScrollView) {
+        
+        
+        self.imageEditorPositionView.delegate?.scrollViewDidScroll?(scrollView)
+        
+        
+    }
+    
+    func scrollViewDidZoom(scrollView: UIScrollView) {
+        self.imageEditorPositionView?.delegate?.imageEditorPositionViewDidEditByZooming(self.imageEditorPositionView!)
+        self.imageEditorPositionView.delegate?.scrollViewDidZoom?(scrollView)
+    }
+    
+    func scrollViewShouldScrollToTop(scrollView: UIScrollView) -> Bool {
+        return false
+    }
+    
+    //    func scrollViewDidScrollToTop(scrollView: UIScrollView) {
+    //
+    //    }
+    
+    func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
+        self.imageEditorPositionView.delegate?.scrollViewWillBeginDecelerating?(scrollView)
+    }
+    
+    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
+        self.imageEditorPositionView.delegate?.scrollViewWillBeginDragging?(scrollView)
+    }
+    
+    func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
+        self.imageEditorPositionView.delegate?.scrollViewWillBeginZooming?(scrollView, withView: view)
+    }
+    
+    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        
+        var metaData = self.imageEditorPositionView.scrollViewMetaData
+        metaData.contentOffset = targetContentOffset.memory
+        
+        self.imageEditorPositionView.delegate?.imageEditorPositionViewWillEndEditing(self.imageEditorPositionView, targetScrollViewMetaData: metaData)
+        
+        self.imageEditorPositionView.delegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
+    }
+}

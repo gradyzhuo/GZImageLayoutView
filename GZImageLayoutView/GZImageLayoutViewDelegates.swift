@@ -49,5 +49,6 @@ protocol GZImageEditorPositionViewDelegate:UIScrollViewDelegate{
     
     func imageEditorPositionViewWillBeginEditing(positionView:GZImageEditorPositionView)
     func imageEditorPositionViewWillEndEditing(positionView:GZImageEditorPositionView, targetScrollViewMetaData:GZScrollViewMetaData)
+    func imageEditorPositionViewDidEndEditing(positionView:GZImageEditorPositionView)
     
 }
