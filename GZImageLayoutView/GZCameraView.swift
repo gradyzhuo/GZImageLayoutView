@@ -305,7 +305,7 @@ class GZCameraView: UIView {
         
     }
     
-    func takePhotoImageData(completionHandler:(imageData:NSData, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
+    func takePhotoImageData(completionHandler:(imageData:NSData?, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
         
         
         
