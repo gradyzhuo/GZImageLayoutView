@@ -9,13 +9,13 @@
 import UIKit
 import AVFoundation
 
-enum GZCameraViewDevicePosition:String, Hashable{
+public enum GZCameraViewDevicePosition:String, Hashable{
     
     case Unspecified = "Unspecified"
     case Back = "Back"
     case Front = "Front"
     
-    var hashValue: Int {
+    public var hashValue: Int {
         return self.rawValue.hashValue
     }
     
@@ -36,7 +36,7 @@ enum GZCameraViewDevicePosition:String, Hashable{
     
 }
 
-enum GZCameraLayerVideoGravity{
+public enum GZCameraLayerVideoGravity{
     
     case Resize
     case Aspect
@@ -58,7 +58,7 @@ enum GZCameraLayerVideoGravity{
     
 }
 
-class GZCameraView: UIView {
+public class GZCameraView: UIView {
     
     var sessionPreset : String! {
         
@@ -71,7 +71,7 @@ class GZCameraView: UIView {
         }
     }
     
-    private lazy var captureSession:AVCaptureSession = {
+    internal lazy var captureSession:AVCaptureSession = {
         var session = AVCaptureSession()
         
         session.addOutput(self.stillImageOutput)
@@ -80,7 +80,7 @@ class GZCameraView: UIView {
         return session
     }()
     
-    private var input:AVCaptureDeviceInput!{
+    internal var input:AVCaptureDeviceInput!{
         didSet{
             
             self.captureSession.removeInput(oldValue)
@@ -89,16 +89,16 @@ class GZCameraView: UIView {
         }
     }
     
-    private var stillImageOutput:AVCaptureStillImageOutput = AVCaptureStillImageOutput(){
+    internal var stillImageOutput:AVCaptureStillImageOutput = AVCaptureStillImageOutput(){
         didSet{
             self.captureSession.removeOutput(oldValue)
             self.captureSession.addOutput(stillImageOutput)
         }
     }
     
-    private var currentCaptureDevice:AVCaptureDevice!
+    internal var currentCaptureDevice:AVCaptureDevice!
     
-    private lazy var captureLayer:AVCaptureVideoPreviewLayer = {
+    internal lazy var captureLayer:AVCaptureVideoPreviewLayer = {
         
         var layer = AVCaptureVideoPreviewLayer(session: self.captureSession)
         layer.videoGravity = self.videoGravity.AVLayerVideoGravity()
@@ -107,17 +107,17 @@ class GZCameraView: UIView {
         return layer
     }()
     
-    var videoGravity:GZCameraLayerVideoGravity = .AspectFill {
+    public var videoGravity:GZCameraLayerVideoGravity = .AspectFill {
         didSet{
             self.captureLayer.videoGravity = videoGravity.AVLayerVideoGravity()
         }
     }
     
-    var isCurrentCaptureDeviceAvailable:Bool{
+    public var isCurrentCaptureDeviceAvailable:Bool{
         return self.currentCaptureDevice != nil
     }
     
-    var opened:Bool = true{
+    public var opened:Bool = true{
         didSet{
             if opened {
                 self.captureSession.startRunning()
@@ -131,7 +131,7 @@ class GZCameraView: UIView {
     }
     
     
-    var devicePosition:GZCameraViewDevicePosition {
+    public var devicePosition:GZCameraViewDevicePosition {
         get{
             if self.currentCaptureDevice == nil {
                 return GZCameraViewDevicePosition.Unspecified
@@ -141,7 +141,7 @@ class GZCameraView: UIView {
         }
     }
     
-    lazy var availableCameraDevice:[GZCameraViewDevicePosition:AVCaptureDevice] = {
+    public lazy var availableCameraDevice:[GZCameraViewDevicePosition:AVCaptureDevice] = {
         
         var deviceList:[GZCameraViewDevicePosition:AVCaptureDevice] = [:]
         var videoDevices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
@@ -161,7 +161,7 @@ class GZCameraView: UIView {
         }()
     
     
-    var flashMode:AVCaptureFlashMode = AVCaptureFlashMode.Auto {
+    public var flashMode:AVCaptureFlashMode = AVCaptureFlashMode.Auto {
         didSet{
             
             if let currentCaptureDevice = self.currentCaptureDevice {
@@ -171,14 +171,15 @@ class GZCameraView: UIView {
                     var error:NSError?
                     
                     currentCaptureDevice.lockForConfiguration(&error)
-                    currentCaptureDevice.flashMode = flashMode
-                    currentCaptureDevice.unlockForConfiguration()
                     
                     if error != nil {
                         
                         println("set flashMode error:\(error?.localizedDescription)")
                         
                     }
+                    
+                    currentCaptureDevice.flashMode = flashMode
+                    currentCaptureDevice.unlockForConfiguration()
                     
                 }
                 
@@ -187,7 +188,7 @@ class GZCameraView: UIView {
         }
     }
     
-    var flashAvailable:Bool {
+    public var flashAvailable:Bool {
         get{
             
             if let currentCaptureDevice = self.currentCaptureDevice {
@@ -198,7 +199,7 @@ class GZCameraView: UIView {
         }
     }
     
-    var focusMode:AVCaptureFocusMode = AVCaptureFocusMode.AutoFocus {
+    public var focusMode:AVCaptureFocusMode = AVCaptureFocusMode.AutoFocus {
         
         didSet{
             
@@ -224,33 +225,33 @@ class GZCameraView: UIView {
         
     }
     
-    init() {
+    public init() {
         super.init(frame : CGRect.zeroRect)
         self.configure()
         
     }
     
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         
         self.configure()
     }
     
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
         self.configure()
     }
     
     
-    override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         
         self.captureLayer.frame = self.layer.bounds
         
     }
     
-    func configure(){
+    internal func configure(){
         
         self.changeDevicePosition()
 //        self.openCamera()
@@ -258,12 +259,12 @@ class GZCameraView: UIView {
         
     }
     
-    func isDeviceAvailable(position:GZCameraViewDevicePosition)->Bool {
+    public func isDeviceAvailable(position:GZCameraViewDevicePosition)->Bool {
         var device = self.availableCameraDevice[position]
         return device != nil
     }
     
-    func changeDevicePosition(position:GZCameraViewDevicePosition = .Back){
+    public func changeDevicePosition(position:GZCameraViewDevicePosition = .Back){
         
         self.captureSession.inputs.map { self.captureSession.removeInput($0 as! AVCaptureInput) }
         
@@ -282,7 +283,7 @@ class GZCameraView: UIView {
     }
     
     
-    func takePhoto(completionHandler:(image:UIImage?, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
+    public func takePhoto(completionHandler:(image:UIImage?, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
         
         self.stillImageOutput.outputSettings = [AVVideoCodecKey:AVVideoCodecJPEG]
         
@@ -305,7 +306,7 @@ class GZCameraView: UIView {
         
     }
     
-    func takePhotoImageData(completionHandler:(imageData:NSData?, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
+    public func takePhotoImageData(completionHandler:(imageData:NSData?, metaData:[NSObject:AnyObject]!, error:NSError!)->Void){
         
         
         
@@ -337,7 +338,7 @@ class GZCameraView: UIView {
     }
     
     
-    func openCamera(force:Bool = false){
+    public func openCamera(force:Bool = false){
         
         if force {
             self.captureSession.stopRunning()
@@ -347,7 +348,7 @@ class GZCameraView: UIView {
         
     }
     
-    func closeCamera(){
+    public func closeCamera(){
         self.opened = false
     }
     

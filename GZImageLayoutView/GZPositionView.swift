@@ -9,7 +9,7 @@
 import Foundation
 
 //MARK: -
-class GZPositionView: UIView {
+public class GZPositionView: UIView {
     
     var position:GZPosition! = GZPosition.fullPosition(){
         didSet{
@@ -22,15 +22,15 @@ class GZPositionView: UIView {
         }
     }
     
-    var identifier:String {
+    public var identifier:String {
         return self.position.identifier
     }
     
-    var maskBezierPath:UIBezierPath!
+    public var maskBezierPath:UIBezierPath!
     
-    private var layoutView:GZImageLayoutView?
+    internal(set) var layoutView:GZImageLayoutView?
     
-    init(layoutView:GZImageLayoutView? = nil, position:GZPosition! = nil, frame:CGRect = CGRect()){
+    public init(layoutView:GZImageLayoutView? = nil, position:GZPosition! = nil, frame:CGRect = CGRect()){
         super.init(frame:frame)
         
         self.layoutView = layoutView
@@ -38,18 +38,18 @@ class GZPositionView: UIView {
         
     }
     
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
         self.configure(nil)
         
     }
     
-    func configure(position:GZPosition!){
+    private func configure(position:GZPosition!){
         self.position = position
     }
     
-    func applyMask(size:CGSize){
+    internal func applyMask(size:CGSize){
         
         var maskLayer = CAShapeLayer()
         
@@ -74,7 +74,7 @@ class GZPositionView: UIView {
     }
     
     
-    override func pointInside(point: CGPoint, withEvent event: UIEvent?) -> Bool {
+    override public func pointInside(point: CGPoint, withEvent event: UIEvent?) -> Bool {
         
         if let maskLayer = self.layer.mask as? CAShapeLayer {
             
@@ -88,18 +88,18 @@ class GZPositionView: UIView {
     
 }
 
-class GZImageEditorPositionView:GZPositionView {
+public class GZImageEditorPositionView:GZPositionView {
     
-    let minZoomScale : CGFloat = 1.0
-    let maxZoomScale : CGFloat = 3.0
+    public let minZoomScale : CGFloat = 1.0
+    public let maxZoomScale : CGFloat = 3.0
     
-    var imageRatio : CGFloat = 1.0
+    public var imageRatio : CGFloat = 1.0
     
     private var privateObjectInfo = ObjectInfo()
     
-    var delegate:GZImageEditorPositionViewDelegate?
+    public var delegate:GZImageEditorPositionViewDelegate?
     
-    var metaData:GZPositionViewMetaData{
+    public var metaData:GZPositionViewMetaData{
         
         set{
             
@@ -117,7 +117,7 @@ class GZImageEditorPositionView:GZPositionView {
         }
     }
     
-    var scrollViewMetaData:GZScrollViewMetaData{
+    public var scrollViewMetaData:GZScrollViewMetaData{
         
         set{
             self.scrollView.zoomScale = newValue.zoomScale
@@ -131,7 +131,7 @@ class GZImageEditorPositionView:GZPositionView {
         
     }
     
-    var imageMetaData:GZPositionViewImageMetaData{
+    public var imageMetaData:GZPositionViewImageMetaData{
         
         set{
             self.setImage(newValue.image, needResetScrollView: true)
@@ -143,7 +143,7 @@ class GZImageEditorPositionView:GZPositionView {
         
     }
     
-    var image:UIImage?{
+    public var image:UIImage?{
         
         set{
             self.setImage(newValue, needResetScrollView: true)
@@ -188,7 +188,7 @@ class GZImageEditorPositionView:GZPositionView {
         
     }
     
-    private override var layoutView:GZImageLayoutView?{
+    internal override var layoutView:GZImageLayoutView?{
         
         didSet{
             
@@ -201,7 +201,7 @@ class GZImageEditorPositionView:GZPositionView {
         
     }
     
-    func setImage(image:UIImage?, needResetScrollView reset:Bool){
+    public func setImage(image:UIImage?, needResetScrollView reset:Bool){
         
         self.imageView.image = image
         
@@ -227,7 +227,7 @@ class GZImageEditorPositionView:GZPositionView {
         
     }
     
-    override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         
         self.scrollView.frame = self.bounds
@@ -244,7 +244,7 @@ class GZImageEditorPositionView:GZPositionView {
     }
     
     
-    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         super.touchesBegan(touches, withEvent: event)
         
         if let touch = touches.first as? UITouch {
@@ -271,7 +271,7 @@ class GZImageEditorPositionView:GZPositionView {
 
 extension GZImageEditorPositionView {
     
-    private func resetScrollView(scrollView:UIScrollView, image:UIImage?){
+    internal func resetScrollView(scrollView:UIScrollView, image:UIImage?){
         
         self.initializeScrollView(scrollView)
         
@@ -352,7 +352,7 @@ extension GZImageEditorPositionView {
         
     }
     
-    private func initializeScrollView(scrollView:UIScrollView, contentSize:CGSize = CGSizeZero){
+    internal func initializeScrollView(scrollView:UIScrollView, contentSize:CGSize = CGSizeZero){
         
         scrollView.zoomScale = 1.0
         scrollView.contentOffset = CGPointZero
@@ -445,9 +445,9 @@ extension GZImageEditorPositionView:UIScrollViewDelegate{
 
 //MARK: - GZHighlightView
 
-class GZHighlightView: GZPositionView {
+public class GZHighlightView: GZPositionView {
     
-    var componentConstraints:[String:[AnyObject]] = [:]
+    private var componentConstraints:[String:[AnyObject]] = [:]
     
     private lazy var borderView:GZHighlightBorderView = {
         var borderView = GZHighlightBorderView()
@@ -464,7 +464,7 @@ class GZHighlightView: GZPositionView {
         return cameraView
         }()
     
-    var borderColor:UIColor{
+    public var borderColor:UIColor{
         
         set{
             self.borderView.borderColor = newValue
@@ -476,7 +476,7 @@ class GZHighlightView: GZPositionView {
         
     }
     
-    var borderWidth:CGFloat {
+    public var borderWidth:CGFloat {
         set{
             self.borderView.borderWidth = newValue
         }
@@ -510,7 +510,7 @@ class GZHighlightView: GZPositionView {
     }
     
     
-    override func updateConstraints() {
+    override public func updateConstraints() {
         super.updateConstraints()
         
         self.removeConstraints(self.componentConstraints["CameraView"] ?? [])
@@ -554,35 +554,35 @@ class GZHighlightView: GZPositionView {
 }
 
 /** 主要呈現出外框用 */
-class GZHighlightBorderView: UIView {
+public class GZHighlightBorderView: UIView {
     
-    var borderWidth:CGFloat = 2.0{
+    public var borderWidth:CGFloat = 2.0{
         didSet{
             self.setNeedsDisplay()
         }
     }
     
-    var borderColor:UIColor = UIColor.blackColor(){
+    public var borderColor:UIColor = UIColor.blackColor(){
         didSet{
             self.setNeedsDisplay()
         }
     }
     
-    var layout:GZLayout = GZLayout.fullLayout()
+    public var layout:GZLayout = GZLayout.fullLayout()
     
-    init() {
+    public init() {
         super.init(frame : CGRect.zeroRect)
         self.setup()
     }
     
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         
         self.setup()
         
     }
     
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
         self.setup()
@@ -590,7 +590,7 @@ class GZHighlightBorderView: UIView {
     
     
     
-    override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         
         self.setNeedsDisplay()
@@ -598,13 +598,13 @@ class GZHighlightBorderView: UIView {
     }
     
     
-    func setup(){
+    private func setup(){
         self.backgroundColor = UIColor.clearColor()
         self.userInteractionEnabled = false
     }
     
     
-    override func drawRect(rect: CGRect) {
+    override public func drawRect(rect: CGRect) {
         let halfBorderWidth = self.borderWidth * 0.5
         let borderBeizerPath = self.layout.unitBorderBezierPath()
         
@@ -629,23 +629,23 @@ class GZHighlightBorderView: UIView {
 extension GZImageCropperScrollView {
     
     //MARK: scroll view delegate
-    internal func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
+    public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
         return self.imageEditorPositionView.imageView
     }
     
-    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+    public func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
         self.imageEditorPositionView.delegate?.scrollViewDidEndDecelerating?(scrollView)
     }
     
-    func scrollViewDidEndDragging(scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    public func scrollViewDidEndDragging(scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         self.imageEditorPositionView.delegate?.scrollViewDidEndDragging?(scrollView, willDecelerate: decelerate)
     }
     
-    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+    public func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
         self.imageEditorPositionView.delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
     }
     
-    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
+    public func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
         
         
         if let imageEditorPositionView = self.imageEditorPositionView {
@@ -657,7 +657,7 @@ extension GZImageCropperScrollView {
         
     }
     
-    func scrollViewDidScroll(scrollView: UIScrollView) {
+    public func scrollViewDidScroll(scrollView: UIScrollView) {
         
         
         self.imageEditorPositionView.delegate?.scrollViewDidScroll?(scrollView)
@@ -665,12 +665,12 @@ extension GZImageCropperScrollView {
         
     }
     
-    func scrollViewDidZoom(scrollView: UIScrollView) {
+    public func scrollViewDidZoom(scrollView: UIScrollView) {
         self.imageEditorPositionView?.delegate?.imageEditorPositionViewDidEditByZooming(self.imageEditorPositionView!)
         self.imageEditorPositionView.delegate?.scrollViewDidZoom?(scrollView)
     }
     
-    func scrollViewShouldScrollToTop(scrollView: UIScrollView) -> Bool {
+    public func scrollViewShouldScrollToTop(scrollView: UIScrollView) -> Bool {
         return false
     }
     
@@ -678,19 +678,19 @@ extension GZImageCropperScrollView {
     //
     //    }
     
-    func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
+    public func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
         self.imageEditorPositionView.delegate?.scrollViewWillBeginDecelerating?(scrollView)
     }
     
-    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
+    public func scrollViewWillBeginDragging(scrollView: UIScrollView) {
         self.imageEditorPositionView.delegate?.scrollViewWillBeginDragging?(scrollView)
     }
     
-    func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
+    public func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
         self.imageEditorPositionView.delegate?.scrollViewWillBeginZooming?(scrollView, withView: view)
     }
     
-    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    public func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         
         var metaData = self.imageEditorPositionView.scrollViewMetaData
         metaData.contentOffset = targetContentOffset.memory

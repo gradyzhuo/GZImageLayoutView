@@ -8,23 +8,23 @@
 
 import UIKit
 
-class GZImageCropperScrollView: UIScrollView, UIScrollViewDelegate {
+public class GZImageCropperScrollView: UIScrollView, UIScrollViewDelegate {
 
-    var imageEditorPositionView:GZImageEditorPositionView!
+    public var imageEditorPositionView:GZImageEditorPositionView!
     
-    init(imageEditorPositionView:GZImageEditorPositionView){
+    internal init(imageEditorPositionView:GZImageEditorPositionView){
         super.init(frame: CGRect.zeroRect)
         self.imageEditorPositionView = imageEditorPositionView
         self.delegate = self
     }
 
     
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
 
-    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         super.touchesBegan(touches, withEvent: event)
         
         self.imageEditorPositionView.delegate?.imageEditorPositionViewWillBeginEditing(self.imageEditorPositionView)
@@ -32,12 +32,12 @@ class GZImageCropperScrollView: UIScrollView, UIScrollViewDelegate {
     }
     
     
-    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         super.touchesEnded(touches, withEvent: event)
         self.imageEditorPositionView.delegate?.imageEditorPositionViewDidEndEditing(self.imageEditorPositionView)
     }
     
-    override func touchesMoved(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesMoved(touches: Set<NSObject>, withEvent event: UIEvent) {
         super.touchesCancelled(touches, withEvent: event)
         
         self.imageEditorPositionView.delegate?.imageEditorPositionViewDidEditByScrolling(imageEditorPositionView)

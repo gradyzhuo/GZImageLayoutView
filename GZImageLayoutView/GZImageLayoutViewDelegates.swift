@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol GZImageLayoutViewDelegate{
+public protocol GZImageLayoutViewDelegate{
     
     func layoutViewDidChangeHighlightPosition(layoutView:GZImageLayoutView, didChangeToPosition position:GZPosition?)
     
@@ -40,7 +40,7 @@ protocol GZImageLayoutViewDelegate{
 
 
 
-protocol GZImageEditorPositionViewDelegate:UIScrollViewDelegate{
+public protocol GZImageEditorPositionViewDelegate:UIScrollViewDelegate{
 
     func imageEditorPositionViewDidEditByScrolling(positionView:GZImageEditorPositionView)
     func imageEditorPositionViewDidEditByZooming(positionView:GZImageEditorPositionView)
