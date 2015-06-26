@@ -182,11 +182,11 @@ public struct GZLayoutViewImagesMetaData {
     }
     
     
-    internal init(positionViews:[String:GZImageEditorPositionView]){
+    internal init(positionViews:[GZImageEditorPositionView]){
         
         var positionMetaDatas:[GZPositionViewMetaData] = []
         
-        for (identifier, positionView) in positionViews {
+        for positionView in positionViews {
             positionMetaDatas.append(positionView.metaData)
         }
         
@@ -214,7 +214,6 @@ public struct GZLayoutViewMetaData{
         
         self.imagesMetaData = GZLayoutViewImagesMetaData(positionViews: layoutView.positionViews)
         self.layout = layoutView.layout
-        
         
     }
     

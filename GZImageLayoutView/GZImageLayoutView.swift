@@ -11,8 +11,6 @@ import AVFoundation
 
 public class GZImageLayoutView: UIView {
     
-    internal var privateObjectInfo:ObjectInfo
-    
     public var imageMetaDataContent:[String:UIImage] = [:]
     
     public var delegate:GZImageLayoutViewDelegate?
@@ -51,16 +49,19 @@ public class GZImageLayoutView: UIView {
         
     }
     
-    public var layout:GZLayout{
-        get{
-            return self.privateObjectInfo.layout
+    public internal(set) var layout:GZLayout = GZLayout.fullLayout(){
+        didSet{
+            self.delegate?.layoutView(self, didChangeLayoutFrom: oldValue, to: layout)
         }
     }
     
-    public var positionViews:[String:GZImageEditorPositionView] = [:]
+    internal var positionViewsDict:[String:GZImageEditorPositionView] = [:]
+    public var positionViews:[GZImageEditorPositionView] = []
+    
+    
     public var positionViewDelegate:GZImageEditorPositionViewDelegate?{
         didSet{
-            for (identifier, positionView) in self.positionViews{
+            for positionView in self.positionViews{
                 positionView.delegate = positionViewDelegate
             }
         }
@@ -72,9 +73,7 @@ public class GZImageLayoutView: UIView {
         return self.highlighView.cameraView
     }
     
-    public var positionIdentifiers:[String] {
-        return self.layout.positions.map { return $0.identifier }
-    }
+    public internal(set) var positionIdentifiers:[String] = []
     
     public var canHighlight:Bool = true {
         didSet{
@@ -83,11 +82,9 @@ public class GZImageLayoutView: UIView {
                 
                 self.borderView.hidden = false
                 self.highlighView.hidden = true
-//                self.privateObjectInfo.currentPosition = nil
                 
             } else {
                 self.borderView.hidden = true
-//                self.currentPosition = self.layout.positions.first
                 self.highlighView.hidden = false
                 
             }
@@ -96,9 +93,7 @@ public class GZImageLayoutView: UIView {
     }
     
     
-    public var currentPosition:GZPosition{
-        return self.privateObjectInfo.currentPosition ?? self.layout.positions.first!
-    }
+    public internal(set) var currentPosition:GZPosition
     
     public var highlighView:GZHighlightView = GZHighlightView()
     
@@ -108,7 +103,7 @@ public class GZImageLayoutView: UIView {
         
         return border
         
-        }()
+    }()
     
     public var borderColor:UIColor{
         
@@ -145,7 +140,7 @@ public class GZImageLayoutView: UIView {
     }
     
     public required init(coder aDecoder: NSCoder) {
-        self.privateObjectInfo = ObjectInfo()
+        self.currentPosition = self.layout.positions[0]
         
         super.init(coder: aDecoder)
         
@@ -155,9 +150,7 @@ public class GZImageLayoutView: UIView {
     
     
     public init(layout:GZLayout, frame:CGRect = CGRect()){
-        
-        self.privateObjectInfo = ObjectInfo()
-        
+        self.currentPosition = self.layout.positions[0]
         super.init(frame:frame)
         
         self.configure(layout)
@@ -188,19 +181,14 @@ public class GZImageLayoutView: UIView {
         
         self.highlighView.applyMask(self.bounds.size)
         
-        for identifier in self.positionIdentifiers {
-            var positionView = self.positionViews[identifier]
-            
-            
-            var idx = find(self.positionIdentifiers, identifier) ?? 0
-            positionView?.position = layout.positions[idx]
-            positionView?.applyMask(self.frame.size)
-
+        for (idx, positionView) in enumerate(self.positionViews) {
+            positionView.position = layout.positions[idx]
+            positionView.applyMask(self.frame.size)
         }
         
-//        for i in 0 ..< self.positionViews.count {
+//        for i in 0 ..< self.positionViewsDict.count {
 //            
-//            var positionView = self.positionViews[i]
+//            var positionView = self.positionViewsDict[i]
 //            
 //            positionView.position = layout.positions[i]
 //            positionView.applyMask(self.frame.size)
@@ -212,9 +200,10 @@ public class GZImageLayoutView: UIView {
     
 
     public func positionView(forIdentifier identifier:String)->GZImageEditorPositionView! {
-
-        return self.positionViews[identifier] //filtedPositionViews.first
         
+        find(self.positionIdentifiers, identifier)
+        
+        return self.positionViewsDict[identifier] //filtedPositionViews.first
     }
     
     public func setImage(image:UIImage?, forPosition identifier:String){
@@ -250,7 +239,7 @@ public class GZImageLayoutView: UIView {
         
         if let position = position {
             
-            self.privateObjectInfo.currentPosition = position
+            self.currentPosition = position
             
             self.highlighView.position = currentPosition
             self.highlighView.applyMask(self.bounds.size)
@@ -266,13 +255,13 @@ public class GZImageLayoutView: UIView {
         
         var imagesMetaDataContent = self.imageMetaDataContent
         
-        for (identifier,positionView) in self.positionViews{
-            
+        for positionView in self.positionViews{
             positionView.removeFromSuperview()
-            
         }
         
         self.positionViews.removeAll(keepCapacity: false)
+        self.positionViewsDict.removeAll(keepCapacity: false)
+        self.positionIdentifiers.removeAll(keepCapacity: false)
         
         for position in layout.positions {
             
@@ -286,8 +275,9 @@ public class GZImageLayoutView: UIView {
             positionView.applyMask(self.bounds.size)
             positionView.image = imagesMetaDataContent[identifier]//positionViewMetaData.image
             
-            self.positionViews[position.identifier] = positionView
-            
+            self.positionViewsDict[position.identifier] = positionView
+            self.positionViews.append(positionView)
+            self.positionIdentifiers.append(identifier)
         }
         
         if let position = layout.position(forIdentifier: currentPosition.identifier){
@@ -299,7 +289,7 @@ public class GZImageLayoutView: UIView {
         self.bringSubviewToFront(self.borderView)
         self.bringSubviewToFront(self.highlighView)
         
-        self.privateObjectInfo.layout = layout
+        self.layout = layout
         
     }
     
@@ -322,15 +312,6 @@ public class GZImageLayoutView: UIView {
         }while  hitView != nil
         
         return hitView
-    }
-    
-    //MARK: Object Info Struct
-    
-    internal struct ObjectInfo{
-        
-        var layout:GZLayout = GZLayout.fullLayout()
-        var currentPosition:GZPosition! = nil
-        
     }
     
     //MARK: Touch Event Handler
@@ -386,6 +367,36 @@ public extension GZImageLayoutView {
     
 }
 
-
+//MARK: - subscript support
+extension GZImageLayoutView {
+    
+    public subscript(position_id:String)->UIImage?{
+        
+        set{
+            self.setImage(newValue, forPosition: position_id)
+        }
+        
+        get{
+            return self.imageForPosition(position_id)
+        }
+        
+    }
+    
+    
+    public subscript(position_idx:Int)->UIImage?{
+        
+        set{
+            let position = self.layout.positions[position_idx]
+            self.setImage(newValue, forPosition: position.identifier)
+        }
+        
+        get{
+            let position = self.layout.positions[position_idx]
+            return self.imageForPosition(position.identifier)
+        }
+        
+    }
+    
+}
 
 

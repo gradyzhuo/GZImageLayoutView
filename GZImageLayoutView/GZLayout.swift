@@ -157,23 +157,15 @@ let kGZPositionFullLayout:GZPosition = GZPosition.fullPosition()
 
 public class GZPosition {
     
-    private var privateObjectInfo:ObjectInfo = ObjectInfo()
+    public internal(set) var identifier:String = kGZPositionIdentifierDefaultFull
     
-    public var identifier:String{
-        return self.privateObjectInfo.identifier
-    }
+    public internal(set) var layoutPoints:[GZLayoutPointUnit] = []
     
-    public var layoutPoints:[GZLayoutPointUnit]{
-        return self.privateObjectInfo.layoutPoints
-    }
-    
-    public var shouldClosePath:Bool{
-        return self.privateObjectInfo.shouldClosePath
-    }
+    public internal(set) var shouldClosePath:Bool = true
     
     public var bezierPath:UIBezierPath {
         
-        self.privateObjectInfo.layoutPoints[0] = self.layoutPoints[0].convertToMoveUnit()
+        self.layoutPoints[0] = self.layoutPoints[0].convertToMoveUnit()
         
         var bezier = self.layoutPoints.reduce(UIBezierPath(), combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
             pointUnit.applyToBezierPath(bezierPath)
@@ -211,23 +203,14 @@ public class GZPosition {
     }
     
     public init(identifier:String, layoutPoints:[GZLayoutPointUnit], closePath:Bool){
-        
-        self.privateObjectInfo.identifier = identifier
-        self.privateObjectInfo.layoutPoints = layoutPoints
-        self.privateObjectInfo.shouldClosePath = closePath
+        self.identifier = identifier
+        self.layoutPoints = layoutPoints
+        self.shouldClosePath = closePath
     }
     
     public func frame(multiple:CGSize)->CGRect{
         return CGRect()
     }
-    
-    private struct ObjectInfo {
-        
-        var identifier:String = kGZPositionIdentifierDefaultFull
-        var layoutPoints:[GZLayoutPointUnit] = []
-        var shouldClosePath:Bool = true
-    }
-    
     
 }
 
@@ -249,44 +232,71 @@ public extension GZPosition {
 public class GZLayout {
     
     //    var contexts:[[NSObject:AnyObject]] = []
+    static internal let GYLayoutFull = GZLayout(positions: [GZPosition.fullPosition()])
     
-    public var identifier:String{
-        
-        if self.privateObjectInfo.identifier == nil {
-            var identifier = "Layout::"
-            for position in self.positions {
-                identifier += "\(position.bezierPath.hashValue)::"
-            }
-            
-            return identifier
-        }
-        
-        return self.privateObjectInfo.identifier
-    }
-    
-    private var privateObjectInfo:ObjectInfo = ObjectInfo()
+    public internal(set) var identifier:String
     
     public class func fullLayout()->GZLayout {
-        
-        var layout = GZLayout()
-        layout.privateObjectInfo.positions = [GZPosition.fullPosition()]
-        
-        return layout
+        return self.GYLayoutFull
     }
     
     
-    public var positions:[GZPosition] {
-        return self.privateObjectInfo.positions
+    public internal(set) var positions:[GZPosition] = []
+    
+    
+    public init(identifier:String? = nil, positions:[GZPosition]) {
+        
+        if let identifier = identifier {
+            self.identifier = identifier
+        }else{
+            self.identifier = positions.reduce("Layout::", combine: { (id, position) -> String in
+                return id + "\(position.bezierPath.hashValue)::"
+            })
+        }
+
+        self.positions = positions
+        
     }
+    
+    
+    public func position(forIdentifier identifier:String)->GZPosition! {
+        
+        var filtedPositionViews = self.positions.filter{ return ($0 as GZPosition).identifier == identifier  }
+        return filtedPositionViews.first
+        
+    }
+    
+    
+    public func unitBorderBezierPath()->UIBezierPath{
+        
+        var borderBezierPath = UIBezierPath()
+        
+        for position in self.positions {
+            
+            borderBezierPath = position.layoutPoints.reduce(borderBezierPath, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
+                pointUnit.applyToBezierPath(bezierPath)
+                return bezierPath
+            })
+            
+        }
+        
+        borderBezierPath.closePath()
+
+        return borderBezierPath
+    }
+
+    
+}
+
+extension GZLayout {
     
     public convenience init(){
         
-        var position:[GZPosition] = []
+        var positions:[GZPosition] = []
         
-        self.init(positions:position)
+        self.init(positions:positions)
         
     }
-    
     
     public convenience init(jsonString:String!){
         
@@ -310,49 +320,6 @@ public class GZLayout {
         self.init(identifier: identifier, positions:position)
         
     }
-    
-    public convenience init(positions:[GZPosition]) {
-        self.init(identifier:nil, positions:positions)
-        
-    }
-    
-    public init(identifier:String!, positions:[GZPosition]) {
-        self.privateObjectInfo.identifier = identifier
-        self.privateObjectInfo.positions = positions
-        
-    }
-    
-    
-    public func position(forIdentifier identifier:String)->GZPosition! {
-        
-        var filtedPositionViews = self.positions.filter{ return ($0 as GZPosition).identifier == identifier  }
-        return filtedPositionViews.first
-    }
-    
-    
-    public func unitBorderBezierPath()->UIBezierPath{
-        
-        var borderBezierPath = UIBezierPath()
-        
-        for position in self.positions {
-            
-            borderBezierPath = position.layoutPoints.reduce(borderBezierPath, combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
-                pointUnit.applyToBezierPath(bezierPath)
-                return bezierPath
-            })
-            
-        }
-        
-        borderBezierPath.closePath()
 
-        return borderBezierPath
-    }
-    
-    private struct ObjectInfo{
-        var identifier:String! = nil
-        var positions:[GZPosition] = []
-        
-    }
-    
     
 }

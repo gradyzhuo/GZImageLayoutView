@@ -10,6 +10,7 @@ import Foundation
 
 public protocol GZImageLayoutViewDelegate{
     
+    func layoutView(layoutView:GZImageLayoutView, didChangeLayoutFrom fromLayout:GZLayout, to toLayout:GZLayout)
     func layoutViewDidChangeHighlightPosition(layoutView:GZImageLayoutView, didChangeToPosition position:GZPosition?)
     
 }
