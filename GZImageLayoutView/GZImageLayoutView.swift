@@ -15,6 +15,12 @@ public class GZImageLayoutView: UIView {
     
     public var delegate:GZImageLayoutViewDelegate?
     
+    public var resizeContentMode:GZImageEditorResizeContentMode = .AspectFill{
+        didSet{
+            self.setResizeContentModeForAllPositions(resizeContentMode)
+        }
+    }
+    
     public var metaData:GZLayoutViewMetaData?{
         
         get{
@@ -38,11 +44,6 @@ public class GZImageLayoutView: UIView {
                     
                 }
                 
-//                for (position, image) in self.privateObjectInfo.imageMetaData {
-//                    
-//                    self.setImage(image, forPosition: position)
-//                    
-//                }
             }
             
         }
@@ -201,11 +202,19 @@ public class GZImageLayoutView: UIView {
 
     public func positionView(forIdentifier identifier:String)->GZImageEditorPositionView! {
         
-        find(self.positionIdentifiers, identifier)
-        
         return self.positionViewsDict[identifier] //filtedPositionViews.first
     }
     
+    internal func setResizeContentModeForAllPositions(resizeContentMode:GZImageEditorResizeContentMode){
+        
+        for positionView in self.positionViews {
+            
+            positionView.resetResizeContentMode(resizeContentMode: resizeContentMode)
+            
+        }
+        
+    }
+
     public func setImage(image:UIImage?, forPosition identifier:String){
         
         var positionView = self.positionView(forIdentifier: identifier)
@@ -252,6 +261,7 @@ public class GZImageLayoutView: UIView {
     
     public func relayout(layout:GZLayout){
         
+        let resizeContentMode = self.resizeContentMode
         
         var imagesMetaDataContent = self.imageMetaDataContent
         
@@ -269,6 +279,7 @@ public class GZImageLayoutView: UIView {
             
             var positionView = GZImageEditorPositionView(layoutView: self, position: position)
             positionView.delegate = self.positionViewDelegate
+            positionView.resizeContentMode = resizeContentMode
             self.addSubview(positionView)
             
             

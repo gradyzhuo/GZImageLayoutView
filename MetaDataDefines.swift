@@ -10,18 +10,20 @@ import Foundation
 
 public struct GZScrollViewMetaData {
     
-    public var contentSize:CGSize
-    public var contentOffset:CGPoint
-    public var zoomScale:CGFloat
-    public var frame:CGRect
-    public var imageRatio:CGFloat
+    public internal(set) var contentSize:CGSize
+    public internal(set) var contentOffset:CGPoint
+    public internal(set) var zoomScale:CGFloat
+    public internal(set) var frame:CGRect
+    public internal(set) var imageRatio:CGFloat
+    public internal(set) var resizeContentMode:GZImageEditorResizeContentMode
     
-    internal init(scrollView:UIScrollView, imageRatio ratio:CGFloat){
+    internal init(scrollView:GZImageCropperScrollView, imageRatio ratio:CGFloat){
         self.contentSize = scrollView.contentSize
         self.contentOffset = scrollView.contentOffset
         self.zoomScale = scrollView.zoomScale
         self.frame = scrollView.frame
         self.imageRatio = ratio
+        self.resizeContentMode = scrollView.resizeContentMode
     }
     
     public var cropInfo:GZCropInfo{
@@ -40,7 +42,6 @@ public struct GZScrollViewMetaData {
         var cropY = contentOffset.y / zoomScale / imageRatio
         
         return GZCropInfo(x: cropX, y: cropY, width: cropWidth, height: cropHeight)
-        
     }
     
 }
@@ -104,6 +105,7 @@ public struct GZCropInfo:Printable, DebugPrintable{
 
 public struct GZPositionViewMetaData : Equatable {
     
+    public var resizeContentMode:GZImageEditorResizeContentMode
     public var imageMetaData:GZPositionViewImageMetaData
     public var scrollViewMetaData:GZScrollViewMetaData
     
@@ -202,6 +204,8 @@ public struct GZLayoutViewMetaData{
     public var layout:GZLayout
     public var imagesMetaData:GZLayoutViewImagesMetaData
     
+    public var resizeContentMode:GZImageEditorResizeContentMode
+    
     public var numerOfPositions:Int{
         return self.imagesMetaData.numberOfImages
     }
@@ -214,7 +218,7 @@ public struct GZLayoutViewMetaData{
         
         self.imagesMetaData = GZLayoutViewImagesMetaData(positionViews: layoutView.positionViews)
         self.layout = layoutView.layout
-        
+        self.resizeContentMode = layoutView.resizeContentMode
     }
     
 }
