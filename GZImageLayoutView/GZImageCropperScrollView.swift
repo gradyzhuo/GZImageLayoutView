@@ -45,16 +45,10 @@ public class GZImageCropperScrollView: UIScrollView {
         var frameToCenter = self.imageView.frame
         
         if frameToCenter.width < boundsSize.width {
-//            frameToCenter.origin.x = (boundsSize.width - frameToCenter.width) / 2
             self.contentOffset.x = -(boundsSize.width - frameToCenter.width) / 2
         }
-//        else{
-//            frameToCenter.origin.x = 0
-//        }
-//        
-        
+
         if frameToCenter.height < boundsSize.height {
-//            frameToCenter.origin.y = ( boundsSize.height - frameToCenter.height ) / 2
             self.contentOffset.y = -( boundsSize.height - frameToCenter.height ) / 2
         }else{
             frameToCenter.origin.y = 0
@@ -194,11 +188,30 @@ extension GZImageCropperScrollView : UIScrollViewDelegate {
     
     public func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         
+        var targetOffset = targetContentOffset.memory
+        
         var metaData = self.imageEditorPositionView.scrollViewMetaData
-        metaData.contentOffset = targetContentOffset.memory
+        metaData.contentOffset = targetOffset
         
         self.imageEditorPositionView.delegate?.imageEditorPositionViewWillEndEditing(self.imageEditorPositionView, targetScrollViewMetaData: metaData)
         
         self.imageEditorPositionView.delegate?.scrollViewWillEndDragging?(scrollView, withVelocity: velocity, targetContentOffset: targetContentOffset)
+        
+        
+//        //讓imageView 縮到最小時還可以置中的方式
+//        
+//        let boundsSize = self.bounds.size
+//        var frameToCenter = self.imageView.frame
+//        
+//        if frameToCenter.width < boundsSize.width {
+//            targetOffset.x = (boundsSize.width - frameToCenter.width) / 2
+//        }
+//        
+//        if frameToCenter.height < boundsSize.height {
+//            targetOffset.y = ( boundsSize.height - frameToCenter.height ) / 2
+//        }
+//        
+//        targetContentOffset.memory = targetOffset
+        
     }
 }

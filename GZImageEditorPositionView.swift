@@ -216,6 +216,7 @@ extension GZImageEditorPositionView {
             var zoomScaleToFillScreen:CGFloat = 1.0
             var targetSize = CGSize.zeroSize
              (self.ratio, targetSize, zoomScaleToFillScreen) = resizeContentMode.targetContentSize(scrollSize: scrollView.frame.size, imageSize: vaildImage.size)
+            scrollView.maximumZoomScale = ceil(zoomScaleToFillScreen) + 2
             
             //
             scrollView.contentSize = targetSize
@@ -230,6 +231,7 @@ extension GZImageEditorPositionView {
             scrollView.contentOffset.y += yOffsetToCenter
             
             scrollView.setZoomScale(zoomScaleToFillScreen, animated: false)
+            
         }
         
     }
