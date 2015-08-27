@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 //MARK: -
 public class GZPositionView: UIView {

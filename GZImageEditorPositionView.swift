@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 internal let GZImageEditorDefaultZoomScale : CGFloat = 1.0
 
