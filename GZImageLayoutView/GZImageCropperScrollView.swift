@@ -25,14 +25,14 @@ public class GZImageCropperScrollView: UIScrollView {
     internal var resizeContentMode:GZImageEditorResizeContentMode = .AspectFill
     
     internal init(imageEditorPositionView:GZImageEditorPositionView){
-        super.init(frame: CGRect.zeroRect)
+        super.init(frame: CGRect.zero)
         self.imageEditorPositionView = imageEditorPositionView
         self.delegate = self
         self.addSubview(self.imageView)
     }
 
     
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -76,17 +76,17 @@ public class GZImageCropperScrollView: UIScrollView {
         
     }
     
-    public override func touchesShouldBegin(touches: Set<NSObject>!, withEvent event: UIEvent!, inContentView view: UIView!) -> Bool {
+    public override func touchesShouldBegin(touches: Set<UITouch>, withEvent event: UIEvent?, inContentView view: UIView) -> Bool {
         
         GZImageCropperScrollView.touchCount = 0
         
         return true
     }
 
-    override public func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesBegan(touches, withEvent: event)
         
-        println("touches.count:\(touches.count)")
+        print("touches.count:\(touches.count)")
         
         GZImageCropperScrollView.touchCount += touches.count
         self.imageEditorPositionView.delegate?.imageEditorPositionViewWillBeginEditing(self.imageEditorPositionView)
@@ -94,7 +94,7 @@ public class GZImageCropperScrollView: UIScrollView {
     }
     
     
-    override public func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesEnded(touches, withEvent: event)
         
         GZImageCropperScrollView.touchCount -= touches.count
@@ -107,12 +107,12 @@ public class GZImageCropperScrollView: UIScrollView {
     }
     
 
-    public override func touchesCancelled(touches: Set<NSObject>!, withEvent event: UIEvent!) {
+    public override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
         super.touchesCancelled(touches, withEvent: event)
-        GZImageCropperScrollView.touchCount -= touches.count
+        GZImageCropperScrollView.touchCount -= touches?.count ?? 0
     }
     
-    override public func touchesMoved(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesCancelled(touches, withEvent: event)
         
         self.imageEditorPositionView.delegate?.imageEditorPositionViewDidEditByScrolling(imageEditorPositionView)
@@ -142,7 +142,7 @@ extension GZImageCropperScrollView : UIScrollViewDelegate {
         self.imageEditorPositionView.delegate?.scrollViewDidEndScrollingAnimation?(scrollView)
     }
     
-    public func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
+    public func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView?, atScale scale: CGFloat) {
         
         if let imageEditorPositionView = self.imageEditorPositionView {
             imageEditorPositionView.delegate?.imageEditorPositionViewDidEndEditByZooming(imageEditorPositionView)
@@ -182,13 +182,13 @@ extension GZImageCropperScrollView : UIScrollViewDelegate {
         self.imageEditorPositionView.delegate?.scrollViewWillBeginDragging?(scrollView)
     }
     
-    public func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView!) {
+    public func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView?) {
         self.imageEditorPositionView.delegate?.scrollViewWillBeginZooming?(scrollView, withView: view)
     }
     
     public func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         
-        var targetOffset = targetContentOffset.memory
+        let targetOffset = targetContentOffset.memory
         
         var metaData = self.imageEditorPositionView.scrollViewMetaData
         metaData.contentOffset = targetOffset

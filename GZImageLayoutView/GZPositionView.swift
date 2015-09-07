@@ -39,7 +39,7 @@ public class GZPositionView: UIView {
         
     }
     
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
         self.configure(nil)
@@ -52,11 +52,11 @@ public class GZPositionView: UIView {
     
     internal func applyMask(size:CGSize){
         
-        var maskLayer = CAShapeLayer()
+        let maskLayer = CAShapeLayer()
         
         if let position = self.position{
             self.maskBezierPath = UIBezierPath()
-            self.maskBezierPath.appendPath(self.position.maskBezierPath)
+            self.maskBezierPath.appendPath(position.maskBezierPath)
             self.maskBezierPath.applyTransform(CGAffineTransformMakeScale(size.width, size.height))
             maskLayer.path = self.maskBezierPath.CGPath
         }
@@ -64,7 +64,7 @@ public class GZPositionView: UIView {
         self.layer.mask = maskLayer
         
         //決定position的位置
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.appendPath(self.position.bezierPath)
         
         bezierPath.applyTransform(CGAffineTransformMakeScale(size.width, size.height))
@@ -79,7 +79,7 @@ public class GZPositionView: UIView {
         
         if let maskLayer = self.layer.mask as? CAShapeLayer {
             
-            var borderBeizerPath = UIBezierPath(CGPath: maskLayer.path)
+            let borderBeizerPath = UIBezierPath(CGPath: maskLayer.path!)
             return borderBeizerPath.containsPoint(point)
             
         }
@@ -94,11 +94,11 @@ public class GZPositionView: UIView {
 
 public class GZHighlightView: GZPositionView {
     
-    private var componentConstraints:[String:[AnyObject]] = [:]
+    private var componentConstraints:[String:[NSLayoutConstraint]] = [:]
     
     private lazy var borderView:GZHighlightBorderView = {
         var borderView = GZHighlightBorderView()
-        borderView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        borderView.translatesAutoresizingMaskIntoConstraints = false
         return borderView
         }()
     
@@ -106,7 +106,7 @@ public class GZHighlightView: GZPositionView {
         
         var cameraView = GZCameraView()
         cameraView.userInteractionEnabled = false
-        cameraView.setTranslatesAutoresizingMaskIntoConstraints(false)
+        cameraView.translatesAutoresizingMaskIntoConstraints = false
         
         return cameraView
         }()
@@ -163,30 +163,30 @@ public class GZHighlightView: GZPositionView {
         self.removeConstraints(self.componentConstraints["CameraView"] ?? [])
         self.removeConstraints(self.componentConstraints["BorderView"] ?? [])
         
-        var constraints = [AnyObject]()
+        var constraints = [NSLayoutConstraint]()
         
-        var metrics:[NSObject:AnyObject] = [:]
+        var metrics:[String:AnyObject] = [:]
         metrics["super_margin_left"] = self.layoutMargins.left
         metrics["super_margin_right"] = self.layoutMargins.right
         metrics["super_margin_top"] = self.layoutMargins.top
         metrics["super_margin_bottom"] = self.layoutMargins.bottom
         
-        var viewsDict:[NSObject:AnyObject] = ["camera_view":self.cameraView, "border_view":self.borderView]
+        let viewsDict:[String:AnyObject] = ["camera_view":self.cameraView, "border_view":self.borderView]
         
-        var vCameraViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("V:|-super_margin_top-[camera_view]-super_margin_bottom-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
-        var hCameraViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|-super_margin_left-[camera_view]-super_margin_right-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
+        let vCameraViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("V:|-super_margin_top-[camera_view]-super_margin_bottom-|", options: NSLayoutFormatOptions(), metrics: metrics, views: viewsDict)
+        let hCameraViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|-super_margin_left-[camera_view]-super_margin_right-|", options: NSLayoutFormatOptions(), metrics: metrics, views: viewsDict)
         
-        var cameraConstraints = [] + vCameraViewConstraints + hCameraViewConstraints
+        let cameraConstraints = [] + vCameraViewConstraints + hCameraViewConstraints
         
         
         self.componentConstraints["CameraView"] = cameraConstraints
         
         constraints += cameraConstraints
         
-        var vBorderViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("V:|-super_margin_top-[border_view]-super_margin_bottom-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
-        var hBorderViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|-super_margin_left-[border_view]-super_margin_right-|", options: NSLayoutFormatOptions.allZeros, metrics: metrics, views: viewsDict)
+        let vBorderViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("V:|-super_margin_top-[border_view]-super_margin_bottom-|", options: NSLayoutFormatOptions(), metrics: metrics, views: viewsDict)
+        let hBorderViewConstraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|-super_margin_left-[border_view]-super_margin_right-|", options: NSLayoutFormatOptions(), metrics: metrics, views: viewsDict)
         
-        var borderConstraints = [] + vBorderViewConstraints + hBorderViewConstraints
+        let borderConstraints = [] + vBorderViewConstraints + hBorderViewConstraints
         
         self.componentConstraints["BorderView"] = borderConstraints
         
@@ -218,7 +218,7 @@ public class GZHighlightBorderView: UIView {
     public var layout:GZLayout = GZLayout.fullLayout()
     
     public init() {
-        super.init(frame : CGRect.zeroRect)
+        super.init(frame : CGRect.zero)
         self.setup()
     }
     
@@ -229,7 +229,7 @@ public class GZHighlightBorderView: UIView {
         
     }
     
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
         self.setup()

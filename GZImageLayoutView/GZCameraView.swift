@@ -146,19 +146,17 @@ public class GZCameraView: UIView {
         var deviceList:[GZCameraViewDevicePosition:AVCaptureDevice] = [:]
         var videoDevices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
         
-        videoDevices.map({ (device:AVCaptureDevice) -> Void in
-            
+        for device in videoDevices {
             if device.position == .Back {
                 deviceList[GZCameraViewDevicePosition.Back] = device
             }
             if device.position == .Front {
                 deviceList[GZCameraViewDevicePosition.Front] = device
             }
-            
-        })
+        }
         
         return deviceList
-        }()
+    }()
     
     
     public var flashMode:AVCaptureFlashMode = AVCaptureFlashMode.Auto {
@@ -170,11 +168,15 @@ public class GZCameraView: UIView {
                     
                     var error:NSError?
                     
-                    currentCaptureDevice.lockForConfiguration(&error)
+                    do {
+                        try currentCaptureDevice.lockForConfiguration()
+                    } catch let error1 as NSError {
+                        error = error1
+                    }
                     
                     if error != nil {
                         
-                        println("set flashMode error:\(error?.localizedDescription)")
+                        print("set flashMode error:\(error?.localizedDescription)")
                         
                     }
                     
@@ -207,14 +209,18 @@ public class GZCameraView: UIView {
                 
                 var error:NSError?
                 
-                currentCaptureDevice.lockForConfiguration(&error)
+                do {
+                    try currentCaptureDevice.lockForConfiguration()
+                } catch let error1 as NSError {
+                    error = error1
+                }
                 currentCaptureDevice.focusMode = focusMode
                 
                 currentCaptureDevice.unlockForConfiguration()
                 
                 if error != nil {
                     
-                    println("set focusMode error:\(error?.localizedDescription)")
+                    print("set focusMode error:\(error?.localizedDescription)")
                     
                 }
                 
@@ -226,7 +232,7 @@ public class GZCameraView: UIView {
     }
     
     public init() {
-        super.init(frame : CGRect.zeroRect)
+        super.init(frame : CGRect.zero)
         self.configure()
         
     }
@@ -237,7 +243,7 @@ public class GZCameraView: UIView {
         self.configure()
     }
     
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
         self.configure()
@@ -260,21 +266,28 @@ public class GZCameraView: UIView {
     }
     
     public func isDeviceAvailable(position:GZCameraViewDevicePosition)->Bool {
-        var device = self.availableCameraDevice[position]
+        let device = self.availableCameraDevice[position]
         return device != nil
     }
     
     public func changeDevicePosition(position:GZCameraViewDevicePosition = .Back){
         
-        self.captureSession.inputs.map { self.captureSession.removeInput($0 as! AVCaptureInput) }
+        
+        self.captureSession.inputs.forEach { self.captureSession.removeInput($0 as! AVCaptureInput) }
         
         self.currentCaptureDevice = self.availableCameraDevice[position]
         
         var error:NSError?
-        var input = AVCaptureDeviceInput(device: self.currentCaptureDevice, error: &error)
+        var input: AVCaptureDeviceInput!
+        do {
+            input = try AVCaptureDeviceInput(device: self.currentCaptureDevice)
+        } catch let error1 as NSError {
+            error = error1
+            input = nil
+        }
         
         if error != nil {
-            println("error:\(error?.localizedDescription)")
+            print("error:\(error?.localizedDescription)")
         }else{
             
             self.captureSession.addInput(input)
@@ -287,13 +300,13 @@ public class GZCameraView: UIView {
         
         self.stillImageOutput.outputSettings = [AVVideoCodecKey:AVVideoCodecJPEG]
         
-        var connection = self.stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
+        let connection = self.stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
         
         self.stillImageOutput.captureStillImageAsynchronouslyFromConnection(connection, completionHandler: { (sampleBuffer:CMSampleBuffer!, error:NSError!) -> Void in
             
             if let sampleBuffer = sampleBuffer {
                 
-                var data = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
+                let data = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
                 
 //                completionHandler(image: UIImage(data: data))
 //                completionHandler(originalData: data, image: UIImage(data: data), metaData: [:])
@@ -314,13 +327,13 @@ public class GZCameraView: UIView {
             
             self.stillImageOutput.outputSettings = [AVVideoCodecKey:AVVideoCodecJPEG]
             
-            var connection = self.stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
+            let connection = self.stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
             
             self.stillImageOutput.captureStillImageAsynchronouslyFromConnection(connection, completionHandler: { (sampleBuffer:CMSampleBuffer!, error:NSError!) -> Void in
                 
                 if let sampleBuffer = sampleBuffer {
                     
-                    var imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
+                    let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
                     
                     completionHandler(imageData: imageData, metaData: [:], error: error)
                     //                completionHandler(originalData: data, image: UIImage(data: data), metaData: [:])

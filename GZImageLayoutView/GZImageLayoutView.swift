@@ -31,7 +31,7 @@ public class GZImageLayoutView: UIView {
             
             if let newMetaData = newValue {
                 
-                var layout:GZLayout = newMetaData.layout
+                let layout:GZLayout = newMetaData.layout
                 
                 self.imageMetaDataContent = newMetaData.imagesMetaData.content
                 
@@ -39,7 +39,7 @@ public class GZImageLayoutView: UIView {
                 
                 for positionMetaData in newMetaData.imagesMetaData.positionMetaDatas {
                     
-                    var positionView:GZImageEditorPositionView = self.positionView(forIdentifier: positionMetaData.identifier) as GZImageEditorPositionView
+                    let positionView:GZImageEditorPositionView = self.positionView(forIdentifier: positionMetaData.identifier) as GZImageEditorPositionView
                     positionView.metaData = positionMetaData
                     
                 }
@@ -140,7 +140,7 @@ public class GZImageLayoutView: UIView {
         
     }
     
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         self.currentPosition = self.layout.positions[0]
         
         super.init(coder: aDecoder)
@@ -182,7 +182,7 @@ public class GZImageLayoutView: UIView {
         
         self.highlighView.applyMask(self.bounds.size)
         
-        for (idx, positionView) in enumerate(self.positionViews) {
+        for (idx, positionView) in self.positionViews.enumerate() {
             positionView.position = layout.positions[idx]
             positionView.applyMask(self.frame.size)
         }
@@ -209,7 +209,7 @@ public class GZImageLayoutView: UIView {
         
         for positionView in self.positionViews {
             
-            positionView.resetResizeContentMode(resizeContentMode: resizeContentMode)
+            positionView.resetResizeContentMode(resizeContentMode)
             
         }
         
@@ -217,7 +217,7 @@ public class GZImageLayoutView: UIView {
 
     public func setImage(image:UIImage?, forPosition identifier:String){
         
-        var positionView = self.positionView(forIdentifier: identifier)
+        let positionView = self.positionView(forIdentifier: identifier)
         
         positionView?.image = image
         
@@ -225,21 +225,21 @@ public class GZImageLayoutView: UIView {
     
     public func imageForPosition(identifier:String)->UIImage?{
         
-        var positionView = self.positionView(forIdentifier: identifier)
+        let positionView = self.positionView(forIdentifier: identifier)
         return positionView?.image
         
     }
     
     public func imageForPosition(position:GZPosition)->UIImage?{
         
-        var positionView = self.positionView(forIdentifier: position.identifier)
+        let positionView = self.positionView(forIdentifier: position.identifier)
         return positionView?.image
         
     }
     
     public func setHighlightPositionIdentifier(identifier:String){
         
-        var position = self.layout.position(forIdentifier: identifier)
+        let position = self.layout.position(forIdentifier: identifier)
         self.changeCurrentPosition(position)
         
     }
@@ -275,9 +275,9 @@ public class GZImageLayoutView: UIView {
         
         for position in layout.positions {
             
-            var identifier = position.identifier
+            let identifier = position.identifier
             
-            var positionView = GZImageEditorPositionView(layoutView: self, position: position)
+            let positionView = GZImageEditorPositionView(layoutView: self, position: position)
             positionView.delegate = self.positionViewDelegate
             positionView.resizeContentMode = resizeContentMode
             self.addSubview(positionView)
@@ -312,7 +312,7 @@ public class GZImageLayoutView: UIView {
             return hitView
         }
         
-        do{
+        repeat{
             
             hitView = hitView?.superview
             if hitView is GZPositionView {
@@ -328,29 +328,29 @@ public class GZImageLayoutView: UIView {
     //MARK: Touch Event Handler
     
     
-    override public func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
-        super.touchesBegan(touches, withEvent: event)
-        
-        var anyTouch = touches.first as! UITouch
-        var location = anyTouch.locationInView(self)
-        
-    }
+//    override public func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+//        super.touchesBegan(touches, withEvent: event)
+//        
+//        let anyTouch = touches.first!
+//        var location = anyTouch.locationInView(self)
+//        
+//    }
     
     
-    override public func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesEnded(touches, withEvent: event)
         
-        var anyTouch = touches.first as! UITouch
+        let anyTouch = touches.first!
         
-        var currentLocation = anyTouch.locationInView(self)
-        var previoudLocation = anyTouch.previousLocationInView(self)
+        let currentLocation = anyTouch.locationInView(self)
+        let previoudLocation = anyTouch.previousLocationInView(self)
         
-        var previousTouchScope = CGRect(x: previoudLocation.x - 8, y: previoudLocation.y - 8, width: 16, height: 16)
+        let previousTouchScope = CGRect(x: previoudLocation.x - 8, y: previoudLocation.y - 8, width: 16, height: 16)
         
         
         if previousTouchScope.contains(currentLocation) {
             
-            var positionView:GZPositionView? = self.hitTest(currentLocation, withEvent: event) as? GZPositionView
+            let positionView:GZPositionView? = self.hitTest(currentLocation, withEvent: event) as? GZPositionView
             self.changeCurrentPosition(positionView?.position)
             
         }
@@ -366,11 +366,11 @@ public extension GZImageLayoutView {
     
     public func swapPositionMetaDatas(id:String, _ other:String) {
         
-        var positionEditorView = self.positionView(forIdentifier: id)
-        var otherPositionEditorView = self.positionView(forIdentifier: other)
+        let positionEditorView = self.positionView(forIdentifier: id)
+        let otherPositionEditorView = self.positionView(forIdentifier: other)
         
-        var metaData = positionEditorView.metaData
-        var otherMetaData = otherPositionEditorView.metaData
+        let metaData = positionEditorView.metaData
+        let otherMetaData = otherPositionEditorView.metaData
         otherPositionEditorView.metaData = metaData
         positionEditorView.metaData = otherMetaData
         

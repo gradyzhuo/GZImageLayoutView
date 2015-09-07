@@ -8,14 +8,14 @@
 
 import UIKit
 
-public enum GZLayoutPointUnit:Printable{
+public enum GZLayoutPointUnit:CustomStringConvertible{
     
     internal init(dataDict:[NSObject:AnyObject]) {
         
-        var type = dataDict["type"] as! String
-        var point = dataDict["point"] as! [CGFloat]
-        var control1:[CGFloat]? = dataDict["control1"] as? [CGFloat]
-        var control2:[CGFloat]? = dataDict["control2"] as? [CGFloat]
+        let type = dataDict["type"] as! String
+        let point = dataDict["point"] as! [CGFloat]
+        let control1:[CGFloat]? = dataDict["control1"] as? [CGFloat]
+        let control2:[CGFloat]? = dataDict["control2"] as? [CGFloat]
         
         self.init(type:type, point:point, control1:control1, control2:control2)
         
@@ -24,27 +24,27 @@ public enum GZLayoutPointUnit:Printable{
     
     internal init(type:String, point:[CGFloat], control1:[CGFloat]?, control2:[CGFloat]?){
         
-        var point:CGPoint = {
-            var x = CGFloat(point[0])
-            var y = CGFloat(point[1])
+        let point:CGPoint = {
+            let x = CGFloat(point[0])
+            let y = CGFloat(point[1])
             return CGPoint(x: x, y: y)
         }()
         
-        var controlPoint1:CGPoint? = {
+        let controlPoint1:CGPoint? = {
             
             if let control1 = control1 {
-                var x = CGFloat(control1[0])
-                var y = CGFloat(control1[1])
+                let x = CGFloat(control1[0])
+                let y = CGFloat(control1[1])
                 return CGPoint(x:x, y:y)
             }
             
             return nil
         }()
         
-        var controlPoint2:CGPoint? = {
+        let controlPoint2:CGPoint? = {
             if let control2 = control2 {
-                var x = CGFloat(control2[0])
-                var y = CGFloat(control2[1])
+                let x = CGFloat(control2[0])
+                let y = CGFloat(control2[1])
                 return CGPoint(x:x, y:y)
             }
             return nil
@@ -64,8 +64,8 @@ public enum GZLayoutPointUnit:Printable{
             self = GZLayoutPointUnit.Line(toPoint: point)
             
         case "curve":
-            var controlPoint1 = control1 ?? point
-            var controlPoint2 = control2 ?? point
+            let controlPoint1 = control1 ?? point
+            let controlPoint2 = control2 ?? point
             self = GZLayoutPointUnit.Curve(toPoint:point, controlPoint1:controlPoint1, controlPoint2:controlPoint2)
 
         default:
@@ -82,7 +82,7 @@ public enum GZLayoutPointUnit:Printable{
     
     internal func isMove()->Bool{
         switch self {
-        case let .Move:
+        case .Move:
             return true
         default:
             return false
@@ -109,11 +109,11 @@ public enum GZLayoutPointUnit:Printable{
     
     internal func convertToMoveUnit()->GZLayoutPointUnit{
         switch self {
-        case let .Move(toPoint: point):
+        case .Move(toPoint: _):
             return self
         case let .Line(toPoint: point):
             return GZLayoutPointUnit.Move(toPoint: point)
-        case let .Curve(toPoint:point, controlPoint1:controlPoint1, controlPoint2:controlPoint2):
+        case let .Curve(toPoint:point, controlPoint1:_, controlPoint2:_):
             return GZLayoutPointUnit.Move(toPoint: point)
         default:
             return GZLayoutPointUnit.Move(toPoint: CGPoint())
@@ -130,7 +130,7 @@ public enum GZLayoutPointUnit:Printable{
             bezierPath.addCurveToPoint(point, controlPoint1: controlPoint1, controlPoint2: controlPoint2)
             
         case .Undefined:
-            println("Error: illegal Point Unit:\(self)")
+            print("Error: illegal Point Unit:\(self)")
         }
     }
     
@@ -167,7 +167,7 @@ public class GZPosition {
         
         self.layoutPoints[0] = self.layoutPoints[0].convertToMoveUnit()
         
-        var bezier = self.layoutPoints.reduce(UIBezierPath(), combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
+        let bezier = self.layoutPoints.reduce(UIBezierPath(), combine: { (bezierPath:UIBezierPath, pointUnit:GZLayoutPointUnit) -> UIBezierPath in
             pointUnit.applyToBezierPath(bezierPath)
             return bezierPath
         })
@@ -181,10 +181,10 @@ public class GZPosition {
     
     public var maskBezierPath:UIBezierPath{
         
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.appendPath(self.bezierPath)
         
-        var firstPoint = bezierPath.bounds.origin
+        let firstPoint = bezierPath.bounds.origin
         
         bezierPath.applyTransform(CGAffineTransformMakeTranslation(-firstPoint.x, -firstPoint.y))
         
@@ -193,10 +193,10 @@ public class GZPosition {
     
     public convenience init(dataDict:[NSObject:AnyObject]) {
         
-        var points:[GZLayoutPointUnit] = (dataDict["points"] as! [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
-        var identifier:String = dataDict["identifier"] as! String
+        let points:[GZLayoutPointUnit] = (dataDict["points"] as! [[NSObject:AnyObject]]).map{ return GZLayoutPointUnit(dataDict: $0)}
+        let identifier:String = dataDict["identifier"] as! String
         
-        var shouldClosePath = dataDict["closePath"] as! Bool
+        let shouldClosePath = dataDict["closePath"] as! Bool
         
         self.init(identifier:identifier, layoutPoints:points, closePath: shouldClosePath)
         
@@ -218,10 +218,10 @@ public extension GZPosition {
     
     public class func fullPosition(identifier:String = kGZPositionIdentifierDefaultFull)->GZPosition {
         
-        var moveToPointUnit = GZLayoutPointUnit.Move(toPoint: CGPoint(x: 0, y: 0))
-        var leftBottomPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 0, y: 1))
-        var rightBottomPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 1, y: 1))
-        var rightTopPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 1, y: 0))
+        let moveToPointUnit = GZLayoutPointUnit.Move(toPoint: CGPoint(x: 0, y: 0))
+        let leftBottomPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 0, y: 1))
+        let rightBottomPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 1, y: 1))
+        let rightTopPointUnit = GZLayoutPointUnit.Line(toPoint: CGPoint(x: 1, y: 0))
         
         return GZPosition(identifier: kGZPositionIdentifierDefaultFull, layoutPoints: [moveToPointUnit, leftBottomPointUnit, rightBottomPointUnit, rightTopPointUnit], closePath:true)
         
@@ -261,7 +261,7 @@ public class GZLayout {
     
     public func position(forIdentifier identifier:String)->GZPosition! {
         
-        var filtedPositionViews = self.positions.filter{ return ($0 as GZPosition).identifier == identifier  }
+        let filtedPositionViews = self.positions.filter{ return ($0 as GZPosition).identifier == identifier  }
         return filtedPositionViews.first
         
     }
@@ -292,7 +292,7 @@ extension GZLayout {
     
     public convenience init(){
         
-        var positions:[GZPosition] = []
+        let positions:[GZPosition] = []
         
         self.init(positions:positions)
         
@@ -300,22 +300,22 @@ extension GZLayout {
     
     public convenience init(jsonString:String!){
         
-        var jsonData = jsonString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)
+        let jsonData = jsonString.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)
         self.init(jsonData:jsonData)
         
     }
     
     public convenience init(jsonData:NSData!, options:NSJSONReadingOptions = NSJSONReadingOptions.AllowFragments, error:NSErrorPointer = nil){
         
-        var jsonObject: [String:AnyObject]? = NSJSONSerialization.JSONObjectWithData(jsonData, options: options, error: error) as? [String:AnyObject]
+        let jsonObject: [String:AnyObject]? = try? NSJSONSerialization.JSONObjectWithData(jsonData, options: options) as! [String:AnyObject]
         self.init(jsonObject:jsonObject ?? [:])
     }
     
     public convenience init(jsonObject:[String:AnyObject]){
         
-        var identifier:String! = jsonObject["identifier"] as! String
-        var originalPositions = jsonObject["positions"] as! [[NSObject:AnyObject]]
-        var position:[GZPosition] = originalPositions.map{GZPosition(dataDict: $0)}
+        let identifier:String! = jsonObject["identifier"] as! String
+        let originalPositions = jsonObject["positions"] as! [[NSObject:AnyObject]]
+        let position:[GZPosition] = originalPositions.map{GZPosition(dataDict: $0)}
         
         self.init(identifier: identifier, positions:position)
         

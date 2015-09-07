@@ -29,18 +29,18 @@ public struct GZScrollViewMetaData {
     
     public var cropInfo:GZCropInfo{
         
-        var contentOffset = self.contentOffset
-        var zoomScale = self.zoomScale
-        var imageRatio = self.imageRatio
+        let contentOffset = self.contentOffset
+        let zoomScale = self.zoomScale
+        let imageRatio = self.imageRatio
         
-        var scrollViewSize = self.frame.size
+        let scrollViewSize = self.frame.size
         
         //        var cropRatio = zoomScale / imageRatio
         
-        var cropWidth = scrollViewSize.width / zoomScale / imageRatio
-        var cropHeight = scrollViewSize.height / zoomScale / imageRatio
-        var cropX = contentOffset.x / zoomScale / imageRatio
-        var cropY = contentOffset.y / zoomScale / imageRatio
+        let cropWidth = scrollViewSize.width / zoomScale / imageRatio
+        let cropHeight = scrollViewSize.height / zoomScale / imageRatio
+        let cropX = contentOffset.x / zoomScale / imageRatio
+        let cropY = contentOffset.y / zoomScale / imageRatio
         
         return GZCropInfo(x: cropX, y: cropY, width: cropWidth, height: cropHeight)
     }
@@ -52,7 +52,7 @@ public struct GZPositionViewImageMetaData{
     public var image:UIImage!
 }
 
-public struct GZCropInfo:Printable, DebugPrintable{
+public struct GZCropInfo:CustomStringConvertible, CustomDebugStringConvertible{
     
     public let bounds:CGRect
     
@@ -125,7 +125,7 @@ public struct GZPositionViewMetaData : Equatable {
 }
 
 public func ==(lhs: GZPositionViewMetaData, rhs: GZPositionViewMetaData) -> Bool{
-    var lhsImage = lhs.image ?? UIImage()
+    let lhsImage = lhs.image ?? UIImage()
     return (lhs.identifier == rhs.identifier) && lhsImage.isEqual(rhs.image)
 }
 
@@ -157,9 +157,9 @@ public struct GZLayoutViewImagesMetaData {
     
     public func image(forPosition identifier:String)->UIImage!{
         
-        if let index = find(self.identifiers, identifier) {
+        if let index = self.identifiers.indexOf(identifier) {
             
-            var positionMetaData = self.positionMetaDatas[index]
+            let positionMetaData = self.positionMetaDatas[index]
             return positionMetaData.image
             
         }
@@ -170,9 +170,9 @@ public struct GZLayoutViewImagesMetaData {
     
     public func positionViewMetaData(forPosition identifier:String)->GZPositionViewMetaData!{
         
-        if let index = find(self.identifiers, identifier) {
+        if let index = self.identifiers.indexOf(identifier) {
             
-            var positionMetaData = self.positionMetaDatas[index]
+            let positionMetaData = self.positionMetaDatas[index]
             return positionMetaData
             
         }
@@ -181,7 +181,7 @@ public struct GZLayoutViewImagesMetaData {
     }
     
     public func isExist(forPosition identifier:String)->Bool{
-        return find(self.identifiers, identifier) != nil
+        return self.identifiers.indexOf(identifier) != nil
     }
     
     

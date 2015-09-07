@@ -15,7 +15,7 @@ public enum GZImageEditorResizeContentMode : Int {
     case AspectFill
     
     /// return (ratio, targetContentSize:base on zoomscale 1, zoomScaleToFillScreen)
-    internal func targetContentSize(#scrollSize:CGSize, imageSize:CGSize)->(ratio:CGFloat,targetContentSiz:CGSize, zoomScaleToFillScreen:CGFloat) {
+    internal func targetContentSize(scrollSize scrollSize:CGSize, imageSize:CGSize)->(ratio:CGFloat,targetContentSiz:CGSize, zoomScaleToFillScreen:CGFloat) {
         
         switch self {
         case .AspectFill:
@@ -28,10 +28,10 @@ public enum GZImageEditorResizeContentMode : Int {
     }
     
     
-    private func aspectFillTargetContentSize(#scrollSize:CGSize, imageSize:CGSize)->(ratio:CGFloat,targetContentSiz:CGSize, zoomScaleToFillScreen:CGFloat){
+    private func aspectFillTargetContentSize(scrollSize scrollSize:CGSize, imageSize:CGSize)->(ratio:CGFloat,targetContentSiz:CGSize, zoomScaleToFillScreen:CGFloat){
         //看scrollView的 width > height or width < height 決定那一邊要為基準
         
-        var targetSize:CGSize = CGSize.zeroSize
+        var targetSize:CGSize = CGSize.zero
         var ratio:CGFloat = 1.0
         
         if scrollSize.width > scrollSize.height {
@@ -81,11 +81,11 @@ public enum GZImageEditorResizeContentMode : Int {
         
     }
     
-    private func aspectFitTargetContentSize(#scrollSize:CGSize, imageSize:CGSize)->(ratio:CGFloat,targetContentSiz:CGSize, zoomScaleToFillScreen:CGFloat){
+    private func aspectFitTargetContentSize(scrollSize scrollSize:CGSize, imageSize:CGSize)->(ratio:CGFloat,targetContentSiz:CGSize, zoomScaleToFillScreen:CGFloat){
         
         //看scrollView的 width > height or width < height 決定那一邊要為基準
         
-        var targetSize:CGSize = CGSize.zeroSize
+        var targetSize:CGSize = CGSize.zero
         var ratio:CGFloat = 1.0
         
         var zoomScale:CGFloat = 1.0

@@ -119,7 +119,7 @@ public class GZImageEditorPositionView:GZPositionView {
         
         didSet{
             
-            var image = layoutView?.imageForPosition(self.identifier)
+            let image = layoutView?.imageForPosition(self.identifier)
             
             if image == nil && self.image != nil {
                 layoutView?.setImage(self.image, forPosition: self.identifier)
@@ -133,7 +133,7 @@ public class GZImageEditorPositionView:GZPositionView {
         self.scrollView.imageView.image = image
         
         if reset{
-            self.resetScrollView(resizeContentMode: resizeContentMode, scrollView: self.scrollView, image: image)
+            self.resetScrollView(resizeContentMode, scrollView: self.scrollView, image: image)
         }
         
         if let parentLayoutView = self.layoutView {
@@ -159,7 +159,7 @@ public class GZImageEditorPositionView:GZPositionView {
         
         self.scrollView.frame = self.bounds
         
-        var metaData = self.privateObjectInfo.metaData ?? self.metaData
+        let metaData = self.privateObjectInfo.metaData ?? self.metaData
         self.imageMetaData = metaData.imageMetaData
         self.scrollViewMetaData = metaData.scrollViewMetaData
         
@@ -171,10 +171,10 @@ public class GZImageEditorPositionView:GZPositionView {
     }
     
     
-    override public func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+    override public func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesBegan(touches, withEvent: event)
         
-        if let touch = touches.first as? UITouch {
+        if let touch = touches.first {
             let point = touch.locationInView(self)
             
             let hitView = self.hitTest(point, withEvent: event)
@@ -199,7 +199,7 @@ public class GZImageEditorPositionView:GZPositionView {
 extension GZImageEditorPositionView {
     
     internal func resetResizeContentMode(resizeContentMode : GZImageEditorResizeContentMode = .AspectFill){
-        self.resetScrollView(resizeContentMode: resizeContentMode, scrollView: self.scrollView, image: self.image)
+        self.resetScrollView(resizeContentMode, scrollView: self.scrollView, image: self.image)
     }
     
     internal func resetScrollView(resizeContentMode : GZImageEditorResizeContentMode = .AspectFill, scrollView:UIScrollView, image:UIImage?){
@@ -211,11 +211,11 @@ extension GZImageEditorPositionView {
             //預先取出所需的屬性值
             let scrollViewWidth = scrollView.frame.width
             let scrollViewHeight = scrollView.frame.height
-            let vaildImageWidth = vaildImage.size.width
-            let vaildImageHeight = vaildImage.size.height
+//            let vaildImageWidth = vaildImage.size.width
+//            let vaildImageHeight = vaildImage.size.height
             
             var zoomScaleToFillScreen:CGFloat = 1.0
-            var targetSize = CGSize.zeroSize
+            var targetSize = CGSize.zero
              (self.ratio, targetSize, zoomScaleToFillScreen) = resizeContentMode.targetContentSize(scrollSize: scrollView.frame.size, imageSize: vaildImage.size)
             scrollView.maximumZoomScale = ceil(zoomScaleToFillScreen) + 2
             
